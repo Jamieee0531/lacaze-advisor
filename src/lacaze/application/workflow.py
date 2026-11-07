@@ -2,6 +2,7 @@ import json
 from datetime import UTC, datetime
 from time import perf_counter
 
+from pydantic_ai.messages import ModelMessagesTypeAdapter
 from pydantic_ai.models import Model
 from pydantic_ai.usage import UsageLimits
 
@@ -33,6 +34,7 @@ class AdvisorWorkflow:
         pack = prepare(case, self.data)
         deps = RunDependencies(pack=pack, data=self.data)
         usage: list[StageUsage] = []
+        trace: dict[str, list] = {}
 
         async def run_stage(agent, stage: str, payload: dict):
             start = perf_counter()
@@ -41,6 +43,8 @@ class AdvisorWorkflow:
                 deps=deps,
                 usage_limits=UsageLimits(request_limit=REQUEST_LIMIT),
             )
+            # Exact exchange with the model: assembled instructions, inputs, outputs, retries.
+            trace[stage] = ModelMessagesTypeAdapter.dump_python(result.all_messages(), mode="json")
             counters = result.usage
             usage.append(
                 StageUsage(
@@ -71,6 +75,7 @@ class AdvisorWorkflow:
             candidates=CandidateMessages(messages=[d.text for d in drafts.drafts]),
             warnings=deps.warnings,
             usage=usage,
+            trace=trace,
         )
 
 

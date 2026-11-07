@@ -1,5 +1,7 @@
 from datetime import date, datetime
 
+from pydantic import Field
+
 from lacaze.domain.models import CandidateMessages, Contract, Scenario, StageUsage
 from lacaze.domain.pack import CasePack
 from lacaze.domain.plan import Draft, Plan
@@ -22,3 +24,6 @@ class GenerationResult(Contract):
     candidates: CandidateMessages
     warnings: list[str]
     usage: list[StageUsage]
+    trace: dict[str, list] = Field(
+        default_factory=dict, description="Per stage, the exact messages exchanged with the model."
+    )
