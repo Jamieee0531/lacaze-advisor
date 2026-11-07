@@ -109,8 +109,11 @@ def run_checks(message: str, case: EvalCase, materials: EvaluationMaterials) -> 
         detail = "、".join(unknown_times) + " 不在本例事实中"
         flags.append(Flag(code="unsupported_time", severity="warning", detail=detail))
 
+    # Policies name every restricted product, so only history and event facts widen the scope.
+    scope_texts = [m.text for m in case.input.conversation_history]
+    scope_texts += [f.text for f in case.facts.event_facts]
     in_scope = {p.name.split()[0] for p in case.facts.products}
-    in_scope |= _mentioned_products(joined, materials.product_names)
+    in_scope |= _mentioned_products("\n".join(scope_texts), materials.product_names)
     out_of_scope = sorted(_mentioned_products(message, materials.product_names) - in_scope)
     if out_of_scope:
         detail = "、".join(out_of_scope) + " 不在本例产品范围内"

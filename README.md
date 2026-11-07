@@ -85,7 +85,7 @@ All JSON field names are English. Chinese text is preserved in names, history an
 
 Identity fields are optional except `name`; unknown is `null`. `client_id` links the client to the store's purchase records (`data/foundation/purchases.json`). `cumulative_spend` records lifetime LACAZE spend (`amount_cny`, `as_of`, `approximate`), derived from those records; tiers are based on it. `annual_spend` is a legacy v0.1.x field kept only so earlier artifacts remain readable.
 
-`product_information` contains `products`, `event_facts`, `service_facts`, and `unavailable_information`. An event or service fact has `fact_id` and `text`. This preserves current confirmed arrangements without inventing a large event-management schema. A catalog lookup cannot book an appointment or confirm a service.
+`product_information` names what the case is about: `product_ids` and an optional `event_id`. The program resolves them from `data/foundation/` into full product records, event facts, and store service and policy facts; unknown IDs fail validation. The resolved lists (`products`, `event_facts`, `service_facts`) appear in results; v0.1.x cases wrote them inline. A catalog lookup cannot book an appointment or confirm a service.
 
 ## Workflow and data ownership
 

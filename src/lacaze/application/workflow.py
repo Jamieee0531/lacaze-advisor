@@ -27,7 +27,7 @@ class AdvisorWorkflow:
             case=case,
             data=self.data,
             max_product_queries=self.max_product_queries,
-            facts=case.product_information.model_copy(deep=True),
+            facts=self.data.foundation.resolve(case.product_information),
         )
         usage: list[StageUsage] = []
 
@@ -51,9 +51,11 @@ class AdvisorWorkflow:
             return result.output
 
         # Scenario is already a validated enum; no classifier model is needed.
-        deps.context = await run_stage(
-            self.extractor, "extraction", case.model_dump(mode="json"), 2
-        )
+        resolved_case = {
+            **case.model_dump(mode="json"),
+            "product_information": deps.facts.model_dump(mode="json"),
+        }
+        deps.context = await run_stage(self.extractor, "extraction", resolved_case, 2)
         common = {
             "case_id": case.case_id,
             "scenario": case.scenario.value,

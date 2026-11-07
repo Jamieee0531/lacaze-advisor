@@ -14,6 +14,7 @@ from lacaze.evaluation.models import (
     compute_label,
     judgment_schema_json,
 )
+from lacaze.infrastructure.data import RuntimeData
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 JUDGE_MODEL = "test-judge-model"
@@ -45,6 +46,7 @@ def judgment_payload(case_id: str, answers: list[dict], distinct: bool = True) -
 
 def write_run(directory: Path, cases, messages_by_case: dict, version: str) -> Path:
     directory.mkdir(parents=True)
+    foundation = RuntimeData.load(DATA_DIR).foundation
     by_id = {c.case_id: c for c in cases}
     for case_id, messages in messages_by_case.items():
         case = by_id[case_id]
@@ -58,7 +60,7 @@ def write_run(directory: Path, cases, messages_by_case: dict, version: str) -> P
                 "app_version": version,
                 "model": "generator-model",
                 "configuration_hash": f"hash-{version}",
-                "facts": case.product_information.model_dump(mode="json"),
+                "facts": foundation.resolve(case.product_information).model_dump(mode="json"),
                 "candidates": {"messages": messages},
             },
             "provenance": {"source_run": f"source-{version}"},

@@ -115,9 +115,18 @@ class SuppliedFact(Contract):
 
 
 class ProductInformation(Contract):
+    """A case names products and an event by ID; the program resolves them from foundation.
+
+    The fact lists are filled by that resolution. Earlier v0.1.x cases wrote them inline.
+    """
+
+    product_ids: list[str] = Field(default_factory=list)
+    event_id: str | None = None
     products: list[Product] = Field(default_factory=list)
     event_facts: list[SuppliedFact] = Field(default_factory=list)
-    service_facts: list[SuppliedFact] = Field(default_factory=list)
+    service_facts: list[SuppliedFact] = Field(
+        default_factory=list, description="Store services and brand policies."
+    )
     unavailable_information: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")

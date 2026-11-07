@@ -40,6 +40,8 @@ async def execute(args: argparse.Namespace) -> int:
     cases_path = getattr(args, "cases", None) or settings.data_dir / "cases/development.jsonl"
     if args.command == "validate-data":
         cases = load_cases(cases_path)
+        for case in cases:
+            data.foundation.check_case(case)
         print(
             json.dumps(
                 {

@@ -13,6 +13,7 @@ LACAZE 的全部业务数据：品牌设定与规则，以及门店系统中的�
 | `products.json` | 六款商品：定位、价格、资格、配货、尺寸、重量、皮料、开合、内部结构、背法、颜色、能装什么、工艺、保养 | `product_id` |
 | `services.json` | 门店服务：内容、适用条件、办理方式 | `service_id` |
 | `policies.json` | 定价、渠道、配货、客户层级规则 | — |
+| `stores.json` | 门店名称与城市 | `store_id` |
 | `events.json` | 门店活动：时间、地点、参加范围、内容、可约时段、不包含的权益 | `event_id` |
 | `calendar.json` | 2026–2027 年节日，农历节日已换算成公历 | `date` + `name` |
 
@@ -23,14 +24,16 @@ LACAZE 的全部业务数据：品牌设定与规则，以及门店系统中的�
 | `clients.json` | 客户身份：称呼、性别、年龄、职业、生日、所属门店、建档日期 | `client_id` |
 | `purchases.json` | 逐笔消费记录：商品、颜色、日期、成交价、门店 | `purchase_id` |
 
-关联：`purchases` → `client_id`、`product_id`；`events.featured_products` → `product_id`。
+关联：`purchases` → `client_id`、`product_id`、`store`；`events` → `store`、`featured_products`；`clients` → `home_store`。程序加载时会检查这些 ID 都存在。
+
+测试用例（`data/cases/`）只写客户 ID、商品 ID 和活动 ID，具体内容从这里读取。
 
 ## 约定
 
 1. **一个事实只存一处。** 累计消费和客户层级由 `purchases.json` 计算，规则见 `policies.json`，不手工填写。
 2. **null 表示不知道，空列表表示确认没有。** 例如 `birthday: null` 表示没有记录生日；客户在 `purchases.json` 中没有记录，表示确认尚无购买。
 3. **ID 用小写英文**，例如 `cl004`、`veronique`、`sv_annual_care`；中文只出现在名称和描述里。
-4. **门店统一为 `shanghai_chengyuan`**，即 LACAZE 上海澄园店。
+4. **门店用 ID 引用**，名称见 `stores.json`；目前只有 `shanghai_chengyuan`（LACAZE 上海澄园店）。
 5. **偏好、需求、沟通习惯不在这里**，由模型从对话历史中理解。
 
 ## 刻意不提供的信息

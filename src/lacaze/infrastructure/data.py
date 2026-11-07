@@ -7,6 +7,15 @@ from pydantic import TypeAdapter
 
 from lacaze.domain.models import BrandPolicy, CaseInput, Product, Scenario, ScenarioPolicy
 from lacaze.infrastructure.catalog import ProductCatalog
+from lacaze.infrastructure.foundation import (
+    Client,
+    Event,
+    Foundation,
+    Policies,
+    Purchase,
+    Service,
+    Store,
+)
 
 
 @dataclass(frozen=True)
@@ -14,6 +23,7 @@ class RuntimeData:
     brand: BrandPolicy
     scenarios: dict[Scenario, ScenarioPolicy]
     catalog: ProductCatalog
+    foundation: Foundation
     prompts: dict[str, str]
     configuration_hash: str
     source_files: dict[str, str]
@@ -24,6 +34,12 @@ class RuntimeData:
             "foundation/brand/brand.json",
             "foundation/brand/scenarios.json",
             "foundation/brand/products.json",
+            "foundation/brand/stores.json",
+            "foundation/brand/services.json",
+            "foundation/brand/events.json",
+            "foundation/brand/policies.json",
+            "foundation/clients/clients.json",
+            "foundation/clients/purchases.json",
             "prompts/extract.md",
             "prompts/decide.md",
             "prompts/generate.md",
@@ -34,16 +50,47 @@ class RuntimeData:
         scenarios = {p.scenario: p for p in policies}
         if set(scenarios) != set(Scenario) or len(policies) != len(Scenario):
             raise ValueError("Exactly one policy is required for each of the six scenarios")
-        products = TypeAdapter(list[Product]).validate_json(raw[paths[2]])
+        catalog = ProductCatalog(TypeAdapter(list[Product]).validate_json(raw[paths[2]]))
+        foundation = Foundation(
+            catalog=catalog,
+            stores=_by_id(TypeAdapter(list[Store]).validate_json(raw[paths[3]]), "store_id"),
+            services=tuple(TypeAdapter(list[Service]).validate_json(raw[paths[4]])),
+            events=_by_id(TypeAdapter(list[Event]).validate_json(raw[paths[5]]), "event_id"),
+            policies=Policies.model_validate_json(raw[paths[6]]),
+            clients=_by_id(TypeAdapter(list[Client]).validate_json(raw[paths[7]]), "client_id"),
+            purchases=tuple(TypeAdapter(list[Purchase]).validate_json(raw[paths[8]])),
+        )
+        _check_references(foundation)
         digest = hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest()
         return cls(
             brand,
             scenarios,
-            ProductCatalog(products),
+            catalog,
+            foundation,
             {name: raw[f"prompts/{name}.md"] for name in ["extract", "decide", "generate"]},
             digest,
             raw,
         )
+
+
+def _by_id(records: list, key: str) -> dict:
+    result = {getattr(r, key): r for r in records}
+    if len(result) != len(records):
+        raise ValueError(f"Duplicate {key} values in foundation data")
+    return result
+
+
+def _check_references(f: Foundation) -> None:
+    """Every ID one foundation file uses must exist in the file that owns it."""
+    products, stores = f.catalog.products, f.stores
+    for p in f.purchases:
+        if p.client_id not in f.clients or p.product_id not in products or p.store not in stores:
+            raise ValueError(f"Purchase {p.purchase_id} references an unknown ID")
+    for e in f.events.values():
+        if e.store not in stores or not set(e.featured_products) <= products.keys():
+            raise ValueError(f"Event {e.event_id} references an unknown ID")
+    if any(c.home_store not in stores for c in f.clients.values()):
+        raise ValueError("A client references an unknown store")
 
 
 def load_cases(path: Path) -> list[CaseInput]:
