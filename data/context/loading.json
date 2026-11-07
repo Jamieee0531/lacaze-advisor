@@ -1,0 +1,71 @@
+{
+  "windows": {
+    "calendar_before_days": 3,
+    "calendar_after_days": 14,
+    "upcoming_event_days": 30
+  },
+  "scenarios": [
+    {
+      "scenario": "Birthday and festive greetings",
+      "product_fields": ["positioning"],
+      "services": [],
+      "policies": [],
+      "event": "none",
+      "calendar": true,
+      "last_contact": false
+    },
+    {
+      "scenario": "Product recommendation",
+      "product_fields": [
+        "positioning", "price_cny", "allocation_ratio", "dimensions_cm", "weight_g",
+        "closure", "interior", "carry", "colors", "fits", "does_not_fit", "craft_points"
+      ],
+      "services": ["sv_private_viewing"],
+      "policies": ["allocation"],
+      "event": "none",
+      "calendar": false,
+      "last_contact": false
+    },
+    {
+      "scenario": "Post-purchase care",
+      "product_fields": ["leather", "closure", "interior", "carry", "care_notes"],
+      "services": [
+        "sv_usage_demo", "sv_annual_care", "sv_repair_assessment", "sv_monogram",
+        "sv_dedicated_advisor"
+      ],
+      "policies": [],
+      "event": "none",
+      "calendar": false,
+      "last_contact": false
+    },
+    {
+      "scenario": "Reactivation",
+      "product_fields": ["positioning"],
+      "services": ["sv_annual_care", "sv_private_viewing"],
+      "policies": [],
+      "event": "upcoming",
+      "calendar": false,
+      "last_contact": true
+    },
+    {
+      "scenario": "Event invitation",
+      "product_fields": ["positioning", "allocation_ratio", "craft_points"],
+      "services": [],
+      "policies": ["allocation"],
+      "event": "case",
+      "calendar": false,
+      "last_contact": false
+    },
+    {
+      "scenario": "Price objection",
+      "product_fields": [
+        "positioning", "price_cny", "allocation_ratio", "leather", "carry", "fits", "craft_points"
+      ],
+      "services": ["sv_annual_care", "sv_repair_assessment", "sv_monogram", "sv_private_viewing"],
+      "policies": ["pricing", "channels", "allocation"],
+      "event": "none",
+      "calendar": false,
+      "last_contact": false
+    }
+  ]
+}

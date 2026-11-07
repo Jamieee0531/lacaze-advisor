@@ -1,10 +1,11 @@
 """Business data from data/foundation and resolution of a case's product and event IDs."""
 
 from dataclasses import dataclass
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
-from lacaze.domain.models import CaseInput, ProductInformation, SuppliedFact
+from lacaze.domain.models import CaseInput, ClientTier, ProductInformation, SuppliedFact
 from lacaze.infrastructure.catalog import ProductCatalog
 
 
@@ -33,6 +34,7 @@ class Event(Record):
     time: str
     store: str
     audience: str
+    min_tier: ClientTier | None = None
     content: str
     featured_products: list[str]
     appointment: str
@@ -49,7 +51,7 @@ class Client(Record):
     occupation: str
     birthday: str | None
     home_store: str
-    client_since: str
+    client_since: date
 
 
 class Purchase(Record):
@@ -57,16 +59,43 @@ class Purchase(Record):
     client_id: str
     product_id: str
     color: str
-    purchase_date: str
+    purchase_date: date
     price_cny: int
     store: str
+
+
+class CalendarDay(Record):
+    date: date
+    name: str
+    type: str
+
+
+class TierLevel(Record):
+    tier: ClientTier
+    min_cny: int | None = None
+    rule: str
+
+
+class TierPolicy(Record):
+    basis: str
+    levels: list[TierLevel]
+    usage: str
 
 
 class Policies(Record):
     pricing: list[str]
     channels: list[str]
     allocation: list[str]
-    tiers: dict
+    tiers: TierPolicy
+
+    def tier_for(self, purchase_count: int, spend_cny: int) -> ClientTier:
+        """Unclassified means no purchases; otherwise the highest threshold reached."""
+        if purchase_count == 0:
+            return ClientTier.UNCLASSIFIED
+        reached = [
+            lv for lv in self.tiers.levels if lv.min_cny is not None and spend_cny >= lv.min_cny
+        ]
+        return max(reached, key=lambda lv: lv.min_cny).tier
 
 
 @dataclass(frozen=True)
@@ -78,12 +107,25 @@ class Foundation:
     policies: Policies
     clients: dict[str, Client]
     purchases: tuple[Purchase, ...]
+    calendar: tuple[CalendarDay, ...]
+
+    def purchases_of(self, client_id: str, until: date) -> list[Purchase]:
+        rows = [p for p in self.purchases if p.client_id == client_id and p.purchase_date <= until]
+        return sorted(rows, key=lambda p: p.purchase_date)
 
     def check_case(self, case: CaseInput) -> None:
-        """Fail fast when a case points at a client, product or event foundation does not have."""
-        client_id = case.client_information.client_id
-        if client_id is not None and client_id not in self.clients:
-            raise ValueError(f"{case.case_id}: unknown client ID {client_id}")
+        """Strict check for our own test cases: every ID exists and inline identity agrees."""
+        info = case.client_information
+        if info.client_id is not None:
+            client = self.clients.get(info.client_id)
+            if client is None:
+                raise ValueError(f"{case.case_id}: unknown client ID {info.client_id}")
+            for field in ("name", "salutation", "gender", "occupation", "birthday"):
+                value = getattr(info, field)
+                if value is not None and value != getattr(client, field):
+                    raise ValueError(
+                        f"{case.case_id}: client_information.{field} disagrees with clients.json"
+                    )
         try:
             self.resolve(case.product_information)
         except ValueError as exc:

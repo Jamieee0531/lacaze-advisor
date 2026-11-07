@@ -6,8 +6,10 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from lacaze.domain.models import BrandPolicy, CaseInput, Product, Scenario, ScenarioPolicy
+from lacaze.domain.pack import LoadingTable
 from lacaze.infrastructure.catalog import ProductCatalog
 from lacaze.infrastructure.foundation import (
+    CalendarDay,
     Client,
     Event,
     Foundation,
@@ -24,6 +26,7 @@ class RuntimeData:
     scenarios: dict[Scenario, ScenarioPolicy]
     catalog: ProductCatalog
     foundation: Foundation
+    loading: LoadingTable
     prompts: dict[str, str]
     configuration_hash: str
     source_files: dict[str, str]
@@ -40,6 +43,8 @@ class RuntimeData:
             "foundation/brand/policies.json",
             "foundation/clients/clients.json",
             "foundation/clients/purchases.json",
+            "foundation/brand/calendar.json",
+            "context/loading.json",
             "prompts/extract.md",
             "prompts/decide.md",
             "prompts/generate.md",
@@ -59,6 +64,7 @@ class RuntimeData:
             policies=Policies.model_validate_json(raw[paths[6]]),
             clients=_by_id(TypeAdapter(list[Client]).validate_json(raw[paths[7]]), "client_id"),
             purchases=tuple(TypeAdapter(list[Purchase]).validate_json(raw[paths[8]])),
+            calendar=tuple(TypeAdapter(list[CalendarDay]).validate_json(raw[paths[9]])),
         )
         _check_references(foundation)
         digest = hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest()
@@ -67,6 +73,7 @@ class RuntimeData:
             scenarios,
             catalog,
             foundation,
+            LoadingTable.model_validate_json(raw[paths[10]]),
             {name: raw[f"prompts/{name}.md"] for name in ["extract", "decide", "generate"]},
             digest,
             raw,
@@ -91,6 +98,8 @@ def _check_references(f: Foundation) -> None:
             raise ValueError(f"Event {e.event_id} references an unknown ID")
     if any(c.home_store not in stores for c in f.clients.values()):
         raise ValueError("A client references an unknown store")
+    if any(p.purchase_date < f.clients[p.client_id].client_since for p in f.purchases):
+        raise ValueError("A purchase predates its client's client_since")
 
 
 def load_cases(path: Path) -> list[CaseInput]:

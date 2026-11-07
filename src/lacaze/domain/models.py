@@ -37,10 +37,12 @@ class SpendAmount(Contract):
 
 
 class ClientInformation(Contract):
+    """A known client is given by client_id alone; a new client is written inline."""
+
     client_id: str | None = Field(
-        default=None, description="Key into the store's purchase records, e.g. cl004."
+        default=None, description="Key into the store's client and purchase records, e.g. cl004."
     )
-    name: str = Field(min_length=1)
+    name: str | None = Field(default=None, min_length=1)
     salutation: str | None = None
     gender: Literal["female", "male", "other"] | None = None
     age: int | None = Field(default=None, ge=0, le=120)
@@ -64,6 +66,12 @@ class ClientInformation(Contract):
                 raise ValueError("birthday must be MM-DD")
             date.fromisoformat(f"2000-{value}")
         return value
+
+    @model_validator(mode="after")
+    def identified(self) -> ClientInformation:
+        if self.client_id is None and self.name is None:
+            raise ValueError("client_information needs a client_id or an inline name")
+        return self
 
 
 class HistoryMessage(Contract):
@@ -109,9 +117,13 @@ class Product(Contract):
     care_instructions: str | None = None
 
 
+FactKind = Literal["product", "purchase", "service", "policy", "event", "calendar", "contact"]
+
+
 class SuppliedFact(Contract):
     fact_id: str
     text: str
+    kind: FactKind | None = None
 
 
 class ProductInformation(Contract):

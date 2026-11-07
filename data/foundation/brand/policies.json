@@ -17,10 +17,10 @@
     "basis": "按客户在 LACAZE 的累计消费金额（由消费记录计算，不手工填写）",
     "levels": [
       {"tier": "Unclassified", "rule": "尚无购买"},
-      {"tier": "Prospect", "rule": "累计消费低于 5 万元"},
-      {"tier": "Core", "rule": "累计消费 5 万元及以上"},
-      {"tier": "VIC", "rule": "累计消费 25 万元及以上"},
-      {"tier": "VVIP", "rule": "累计消费 100 万元及以上"}
+      {"tier": "Prospect", "min_cny": 0, "rule": "累计消费低于 5 万元"},
+      {"tier": "Core", "min_cny": 50000, "rule": "累计消费 5 万元及以上"},
+      {"tier": "VIC", "min_cny": 250000, "rule": "累计消费 25 万元及以上"},
+      {"tier": "VVIP", "min_cny": 1000000, "rule": "累计消费 100 万元及以上"}
     ],
     "usage": "层级仅用于内部判断资格和服务安排，不向客户播报。"
   }

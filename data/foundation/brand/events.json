@@ -6,6 +6,7 @@
     "time": "14:00–17:00",
     "store": "shanghai_chengyuan",
     "audience": "VIC 及以上客户，预约参加",
+    "min_tier": "VIC",
     "content": "围绕 Margaux 与 Véronique 的设计细节进行介绍，可看实物、试背，并与顾问交流。",
     "featured_products": ["margaux", "veronique"],
     "appointment": "可预约约 20 分钟的一对一交流；意向时段 14:00 或 15:30，须经门店确认。",
