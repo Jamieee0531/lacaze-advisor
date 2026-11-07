@@ -1,0 +1,65 @@
+[
+  {
+    "purchase_id": "p0001",
+    "client_id": "cl004",
+    "product_id": "margaux",
+    "color": "黑色",
+    "purchase_date": "2024-12-14",
+    "price_cny": 68000,
+    "store": "shanghai_chengyuan"
+  },
+  {
+    "purchase_id": "p0002",
+    "client_id": "cl003",
+    "product_id": "sable",
+    "color": "灰色",
+    "purchase_date": "2024-12-06",
+    "price_cny": 42000,
+    "store": "shanghai_chengyuan"
+  },
+  {
+    "purchase_id": "p0003",
+    "client_id": "cl004",
+    "product_id": "odette",
+    "color": "海军蓝",
+    "purchase_date": "2025-10-18",
+    "price_cny": 85000,
+    "store": "shanghai_chengyuan"
+  },
+  {
+    "purchase_id": "p0004",
+    "client_id": "cl002",
+    "product_id": "colette",
+    "color": "黑色",
+    "purchase_date": "2025-12-20",
+    "price_cny": 35000,
+    "store": "shanghai_chengyuan"
+  },
+  {
+    "purchase_id": "p0005",
+    "client_id": "cl003",
+    "product_id": "margaux",
+    "color": "深棕",
+    "purchase_date": "2026-03-13",
+    "price_cny": 68000,
+    "store": "shanghai_chengyuan"
+  },
+  {
+    "purchase_id": "p0006",
+    "client_id": "cl002",
+    "product_id": "sable",
+    "color": "驼色",
+    "purchase_date": "2026-08-14",
+    "price_cny": 42000,
+    "store": "shanghai_chengyuan"
+  },
+  {
+    "purchase_id": "p0007",
+    "client_id": "cl004",
+    "product_id": "veronique",
+    "color": "自然色",
+    "purchase_date": "2026-09-19",
+    "price_cny": 150000,
+    "store": "shanghai_chengyuan"
+  }
+]

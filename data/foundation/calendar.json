@@ -1,0 +1,19 @@
+[
+  {"date": "2026-01-01", "name": "元旦", "type": "solar"},
+  {"date": "2026-02-14", "name": "情人节", "type": "solar"},
+  {"date": "2026-02-17", "name": "春节", "type": "lunar"},
+  {"date": "2026-03-03", "name": "元宵节", "type": "lunar"},
+  {"date": "2026-03-08", "name": "妇女节", "type": "solar"},
+  {"date": "2026-05-10", "name": "母亲节", "type": "solar"},
+  {"date": "2026-06-19", "name": "端午节", "type": "lunar"},
+  {"date": "2026-08-19", "name": "七夕", "type": "lunar"},
+  {"date": "2026-09-25", "name": "中秋节", "type": "lunar"},
+  {"date": "2026-10-18", "name": "重阳节", "type": "lunar"},
+  {"date": "2026-12-25", "name": "圣诞节", "type": "solar"},
+  {"date": "2027-01-01", "name": "元旦", "type": "solar"},
+  {"date": "2027-02-06", "name": "春节", "type": "lunar"},
+  {"date": "2027-02-14", "name": "情人节", "type": "solar"},
+  {"date": "2027-02-20", "name": "元宵节", "type": "lunar"},
+  {"date": "2027-03-08", "name": "妇女节", "type": "solar"},
+  {"date": "2027-05-09", "name": "母亲节", "type": "solar"}
+]

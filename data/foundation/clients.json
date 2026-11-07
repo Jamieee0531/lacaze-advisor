@@ -1,0 +1,46 @@
+[
+  {
+    "client_id": "cl001",
+    "name": "吴婷",
+    "salutation": "吴女士",
+    "gender": "female",
+    "age": 35,
+    "occupation": "企业中层",
+    "birthday": null,
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2026-10-18"
+  },
+  {
+    "client_id": "cl002",
+    "name": "林悦",
+    "salutation": "林女士",
+    "gender": "female",
+    "age": 36,
+    "occupation": "金融从业者",
+    "birthday": null,
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2025-11-08"
+  },
+  {
+    "client_id": "cl003",
+    "name": "何琳",
+    "salutation": "何女士",
+    "gender": "female",
+    "age": 39,
+    "occupation": "外企市场总监",
+    "birthday": null,
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2024-12-06"
+  },
+  {
+    "client_id": "cl004",
+    "name": "张宁",
+    "salutation": "张女士",
+    "gender": "female",
+    "age": 50,
+    "occupation": "投资人",
+    "birthday": "11-06",
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2024-11-23"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "service_id": "sv_annual_care",
+    "name": "每年一次免费基础护理",
+    "description": "每只在 LACAZE 官方门店购买的手袋，每年可送店做一次免费基础护理：皮面清洁、五金擦拭、形状整理。",
+    "eligibility": "官方门店购买的商品，凭购买记录",
+    "how": "送店办理，约 7 天取回"
+  },
+  {
+    "service_id": "sv_usage_demo",
+    "name": "到店使用演示",
+    "description": "购买后可随时到店，由顾问当面演示开合、背法和日常收纳。",
+    "eligibility": "官方门店购买的商品",
+    "how": "需提前与顾问约定时间"
+  },
+  {
+    "service_id": "sv_monogram",
+    "name": "首字母烫印",
+    "description": "在内侧皮标免费烫印首字母，最多三个字母。",
+    "eligibility": "官方门店购买的商品，购买时或购买后均可",
+    "how": "到店办理，约 30 分钟"
+  },
+  {
+    "service_id": "sv_repair_assessment",
+    "name": "维修评估",
+    "description": "五金、缝线、肩带等问题可送巴黎工坊评估。评估免费，维修费用根据评估结果另行报价。",
+    "eligibility": "官方门店购买的商品",
+    "how": "送店办理，评估约 4 周"
+  },
+  {
+    "service_id": "sv_private_viewing",
+    "name": "到店看实物与试背",
+    "description": "可预约在店内看实物、试背，由顾问一对一接待。",
+    "eligibility": "所有客户",
+    "how": "需提前与顾问约定时间"
+  },
+  {
+    "service_id": "sv_dedicated_advisor",
+    "name": "专属顾问持续服务",
+    "description": "购买后可随时联系原顾问，咨询使用、搭配与护理问题。",
+    "eligibility": "所有客户",
+    "how": "微信联系顾问"
+  }
+]
