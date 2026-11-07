@@ -15,5 +15,10 @@
   {"date": "2027-02-14", "name": "情人节", "type": "solar"},
   {"date": "2027-02-20", "name": "元宵节", "type": "lunar"},
   {"date": "2027-03-08", "name": "妇女节", "type": "solar"},
-  {"date": "2027-05-09", "name": "母亲节", "type": "solar"}
+  {"date": "2027-05-09", "name": "母亲节", "type": "solar"},
+  {"date": "2027-06-09", "name": "端午节", "type": "lunar"},
+  {"date": "2027-08-08", "name": "七夕", "type": "lunar"},
+  {"date": "2027-09-15", "name": "中秋节", "type": "lunar"},
+  {"date": "2027-10-08", "name": "重阳节", "type": "lunar"},
+  {"date": "2027-12-25", "name": "圣诞节", "type": "solar"}
 ]

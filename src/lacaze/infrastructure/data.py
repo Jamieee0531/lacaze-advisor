@@ -21,9 +21,9 @@ class RuntimeData:
     @classmethod
     def load(cls, directory: Path) -> "RuntimeData":
         paths = [
-            "policies/brand.json",
-            "policies/scenarios.json",
-            "catalog/products.json",
+            "foundation/brand/brand.json",
+            "foundation/brand/scenarios.json",
+            "foundation/brand/products.json",
             "prompts/extract.md",
             "prompts/decide.md",
             "prompts/generate.md",

@@ -73,18 +73,38 @@ class HistoryMessage(Contract):
     text: str = Field(min_length=1)
 
 
+class Dimensions(Contract):
+    width: float = Field(gt=0)
+    height: float = Field(gt=0)
+    depth: float = Field(gt=0)
+
+
 class Product(Contract):
+    """Catalog record from data/foundation/brand/products.json; null means not provided."""
+
     product_id: str
     name: str
+    positioning: str | None = None
     price_cny: int = Field(gt=0)
     price_type: Literal["fixed", "starting_at"] = "fixed"
-    category: str
-    features: list[str]
     eligible_tiers: list[ClientTier]
     allocation_ratio: str | None = None
+    dimensions_cm: Dimensions | None = None
+    weight_g: float | None = Field(default=None, gt=0)
+    leather: str | None = None
+    closure: str | None = None
+    interior: str | None = None
+    carry: str | None = None
+    colors: list[str] = Field(default_factory=list)
+    fits: list[str] = Field(default_factory=list)
+    does_not_fit: list[str] = Field(default_factory=list)
+    craft_points: list[str] = Field(default_factory=list)
+    care_notes: list[str] = Field(default_factory=list)
+    # Legacy v0.1.x snapshot fields, kept only so earlier cases and artifacts still load.
+    category: str | None = None
+    features: list[str] = Field(default_factory=list)
     material: str | None = None
     dimensions: str | None = None
-    weight_g: float | None = Field(default=None, gt=0)
     compartments: str | None = None
     care_instructions: str | None = None
 

@@ -10,11 +10,12 @@ from tests.conftest import ScriptedModel
 
 def test_catalog_marks_unknown_fields_and_names(data):
     result = data.catalog.query(
-        ["Sable", "Odette", "MadeUp"], ["weight_g", "compartments"], ProductInformation()
+        ["Sable", "Odette", "MadeUp"], ["weight_g", "interior", "stock"], ProductInformation()
     )
     assert {p.product_id for p in result.products} == {"sable", "odette"}
     assert result.unknown_names == ["MadeUp"]
-    assert result.unavailable_fields["odette"] == ["weight_g", "compartments"]
+    # The foundation catalog has specs; stock is deliberately never provided to advisors.
+    assert result.unavailable_fields["odette"] == ["stock"]
 
 
 def test_supplied_product_snapshot_is_authoritative(data, cases):

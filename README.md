@@ -41,8 +41,8 @@ src/lacaze/
   infrastructure/            Configuration, JSON loading, catalog and Hyperspace
   interfaces/                CLI and thin HTTP entry point
 data/
-  policies/                  Brand rules and six scenario policies
-  catalog/products.json       Six fictional products; unknown specs remain null
+  foundation/brand/          Brand rules, scenario policies, products, services, policies, events, calendar
+  foundation/clients/        Client records and itemized purchases
   prompts/                   Extraction, decision and generation instructions
   cases/development.jsonl     Ten executable input cases
 scripts/run_cases.py          Batch convenience entry point

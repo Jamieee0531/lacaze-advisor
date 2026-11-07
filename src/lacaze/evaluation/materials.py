@@ -16,7 +16,7 @@ EVALUATION_FILES = {
     "schema_sha256": "evaluation/judgment.schema.json",
     "checks_sha256": "evaluation/checks.json",
 }
-POLICY_FILES = ("policies/brand.json", "policies/scenarios.json")
+POLICY_FILES = ("foundation/brand/brand.json", "foundation/brand/scenarios.json")
 
 
 class CheckConfig(Frozen):
@@ -51,7 +51,7 @@ def load_materials(data_dir: Path) -> EvaluationMaterials:
     hashes["evaluation_config_hash"] = sha256(json.dumps(hashes, sort_keys=True))
     scenario_list = TypeAdapter(list[ScenarioPolicy]).validate_json(policies[POLICY_FILES[1]])
     products = TypeAdapter(list[Product]).validate_json(
-        (data_dir / "catalog/products.json").read_text(encoding="utf-8")
+        (data_dir / "foundation/brand/products.json").read_text(encoding="utf-8")
     )
     return EvaluationMaterials(
         rubric=raw[EVALUATION_FILES["rubric_sha256"]],

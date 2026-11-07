@@ -17,9 +17,7 @@
 | 运行文件 | 用途 |
 | --- | --- |
 | `data/cases/development.jsonl` | 十条结构化案例，每行一条；身份、历史、业务日期、商品/活动/服务事实 |
-| `data/policies/brand.json` | 品牌设定和话术规则 |
-| `data/policies/scenarios.json` | 六个场景各自的目标和规则 |
-| `data/catalog/products.json` | 六款商品的本地只读产品库 |
+| `data/foundation/` | 数据基建：品牌规则、场景规则、产品库、门店服务、政策、活动、节日、客户与消费记录，见其中的 README |
 | `data/prompts/extract.md` | 提取阶段的指令 |
 | `data/prompts/decide.md` | 决策阶段的指令 |
 | `data/prompts/generate.md` | 写作阶段的指令 |
