@@ -1,0 +1,16 @@
+.venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+.DS_Store
+artifacts/
+.local/
+dist/
+*.egg-info/
+# Confidential recruitment source material and screenshots stay local.
+*.pdf
+截屏/

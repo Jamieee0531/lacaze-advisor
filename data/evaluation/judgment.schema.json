@@ -1,0 +1,102 @@
+{
+  "$defs": {
+    "MessageJudgment": {
+      "additionalProperties": false,
+      "properties": {
+        "message_index": {
+          "enum": [
+            1,
+            2,
+            3
+          ],
+          "title": "Message Index",
+          "type": "integer"
+        },
+        "fabricates_facts": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "crosses_brand_redline": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "contradicts_client_wish": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "is_personal": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "natural_and_on_brand": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "responds_to_moment": {
+          "$ref": "#/$defs/Verdict"
+        }
+      },
+      "required": [
+        "message_index",
+        "fabricates_facts",
+        "crosses_brand_redline",
+        "contradicts_client_wish",
+        "is_personal",
+        "natural_and_on_brand",
+        "responds_to_moment"
+      ],
+      "title": "MessageJudgment",
+      "type": "object"
+    },
+    "Verdict": {
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "description": "true = 是, false = 否",
+          "title": "Answer",
+          "type": "boolean"
+        },
+        "reason": {
+          "description": "一句中文理由，尽量用「」引用原文",
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "answer",
+        "reason"
+      ],
+      "title": "Verdict",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "minLength": 1,
+      "title": "Case Id",
+      "type": "string"
+    },
+    "judge_model": {
+      "minLength": 1,
+      "title": "Judge Model",
+      "type": "string"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/MessageJudgment"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Messages",
+      "type": "array"
+    },
+    "distinct_angles": {
+      "$ref": "#/$defs/Verdict"
+    }
+  },
+  "required": [
+    "case_id",
+    "judge_model",
+    "messages",
+    "distinct_angles"
+  ],
+  "title": "CaseJudgment",
+  "type": "object"
+}
