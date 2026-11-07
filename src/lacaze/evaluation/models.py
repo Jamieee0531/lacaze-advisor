@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from lacaze.domain.models import CaseInput, ProductInformation, Scenario
+from lacaze.domain.models import CaseInput, Scenario, SuppliedFact
 
 
 class Frozen(BaseModel):
@@ -84,13 +84,14 @@ class Flag(Frozen):
 
 
 class EvalCase(Frozen):
-    """One generated case as the generator saw it: input, visible facts and three drafts."""
+    """One generated case as the generator saw it: input, client, visible facts and drafts."""
 
     case_id: str
     scenario: Scenario
     case_date: date
     input: CaseInput
-    facts: ProductInformation
+    client: dict = Field(description="Client information the generator saw")
+    facts: tuple[SuppliedFact, ...] = Field(description="Every fact the generator could use")
     messages: tuple[str, str, str]
     app_version: str
     configuration_hash: str

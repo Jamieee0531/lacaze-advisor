@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from lacaze.evaluation.checks import run_checks
 from lacaze.evaluation.executors import read_judgment
-from lacaze.evaluation.loader import load_run
+from lacaze.evaluation.loader import load_run, read_eval_case
 from lacaze.evaluation.materials import load_materials, sha256
 from lacaze.evaluation.models import (
     MESSAGE_CRITERIA,
@@ -34,7 +34,7 @@ def _read_json(path: Path):
 
 
 def load_eval_cases(eval_dir: Path) -> list[EvalCase]:
-    return [EvalCase.model_validate(c) for c in _read_json(eval_dir / "cases.json")]
+    return [read_eval_case(c) for c in _read_json(eval_dir / "cases.json")]
 
 
 def prepare(run_dir: Path, eval_dir: Path, data_dir: Path, judge_model: str) -> dict:

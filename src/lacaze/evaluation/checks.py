@@ -17,6 +17,7 @@ CHINESE_WAN = re.compile(r"([一二两三四五六七八九十]+)万(?:([一二�
 DATE = re.compile(r"(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]")
 TIME = re.compile(r"(?<!\d)(\d{1,2})\s*[:：]\s*(\d{2})(?!\d)")
 EXCLAMATION = re.compile(r"[!！]")
+SCOPE_KINDS = {"product", "purchase", "event"}
 
 
 def _chinese_number(text: str) -> int:
@@ -51,10 +52,7 @@ def normalize(text: str) -> str:
 
 def _source_texts(case: EvalCase) -> list[str]:
     """Texts a message may legitimately draw numbers and dates from."""
-    facts = case.facts
-    texts = [m.text for m in case.input.conversation_history]
-    texts += [f.text for f in facts.event_facts + facts.service_facts]
-    return texts
+    return [m.text for m in case.input.conversation_history] + [f.text for f in case.facts]
 
 
 def _mentioned_products(text: str, names: tuple[str, ...]) -> set[str]:
@@ -87,7 +85,7 @@ def run_checks(message: str, case: EvalCase, materials: EvaluationMaterials) -> 
     if EXCLAMATION.search(message):
         flags.append(Flag(code="exclamation", severity="warning", detail="出现感叹号"))
 
-    allowed_prices = {p.price_cny for p in case.facts.products} | extract_prices(joined)
+    allowed_prices = extract_prices(joined)
     unknown_prices = sorted(extract_prices(message) - allowed_prices)
     if unknown_prices:
         detail = "、".join(f"{p:,} 元" for p in unknown_prices) + " 不在本例事实中"
@@ -95,7 +93,7 @@ def run_checks(message: str, case: EvalCase, materials: EvaluationMaterials) -> 
 
     allowed_dates = extract_dates(joined) | {(case.case_date.month, case.case_date.day)}
     allowed_dates |= {(m.date.month, m.date.day) for m in case.input.conversation_history}
-    birthday = case.input.client_information.birthday
+    birthday = case.client.get("birthday")
     if birthday:
         month, day = birthday.split("-")
         allowed_dates.add((int(month), int(day)))
@@ -109,17 +107,16 @@ def run_checks(message: str, case: EvalCase, materials: EvaluationMaterials) -> 
         detail = "、".join(unknown_times) + " 不在本例事实中"
         flags.append(Flag(code="unsupported_time", severity="warning", detail=detail))
 
-    # Policies name every restricted product, so only history and event facts widen the scope.
+    # Policies name every restricted product, so they do not widen the scope.
     scope_texts = [m.text for m in case.input.conversation_history]
-    scope_texts += [f.text for f in case.facts.event_facts]
-    in_scope = {p.name.split()[0] for p in case.facts.products}
-    in_scope |= _mentioned_products("\n".join(scope_texts), materials.product_names)
+    scope_texts += [f.text for f in case.facts if f.kind in SCOPE_KINDS]
+    in_scope = _mentioned_products("\n".join(scope_texts), materials.product_names)
     out_of_scope = sorted(_mentioned_products(message, materials.product_names) - in_scope)
     if out_of_scope:
         detail = "、".join(out_of_scope) + " 不在本例产品范围内"
         flags.append(Flag(code="product_out_of_scope", severity="warning", detail=detail))
 
-    salutation = case.input.client_information.salutation
+    salutation = case.client.get("salutation")
     if salutation and salutation not in message:
         flags.append(
             Flag(code="missing_salutation", severity="warning", detail=f"未使用称呼「{salutation}」")

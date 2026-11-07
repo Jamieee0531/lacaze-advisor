@@ -68,7 +68,7 @@ async def execute(args: argparse.Namespace) -> int:
                 raise ValueError(f"Unknown case IDs: {sorted(unknown)}")
             cases = [selected[cid] for cid in dict.fromkeys(requested)]
     model, client = create_model(settings)
-    workflow = AdvisorWorkflow(model, data, settings.max_product_queries)
+    workflow = AdvisorWorkflow(model, data)
     try:
         if args.command == "generate":
             result = await workflow.generate(cases[0])

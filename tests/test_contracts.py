@@ -3,17 +3,23 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from lacaze.domain.models import CandidateMessages, CaseInput, Scenario
+from lacaze.domain.models import CandidateMessages, CaseInput, ClientInformation, Scenario
 
 
-def test_development_cases_preserve_scenarios_dates_and_unknowns(cases):
+def test_development_cases_name_clients_by_id_only(cases):
     assert len(cases) == 10
     assert {c.scenario for c in cases} == set(Scenario)
     assert cases[0].case_date == date(2026, 11, 6)
-    assert cases[0].client_information.birthday == "11-06"
-    assert cases[1].client_information.birthday is None
-    assert cases[2].client_information.cumulative_spend.amount_cny == 0
-    assert cases[0].client_information.client_id == "cl004"
+    # Identity, spend and tier live in foundation; the case only says who the client is.
+    assert all(
+        c.client_information.model_dump(exclude_none=True).keys() == {"client_id"} for c in cases
+    )
+
+
+def test_client_needs_an_id_or_an_inline_name():
+    with pytest.raises(ValidationError):
+        ClientInformation()
+    assert ClientInformation(name="周敏").name == "周敏"
 
 
 @pytest.mark.parametrize(

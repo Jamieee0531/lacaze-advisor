@@ -27,7 +27,7 @@ async def run_batch(
             "case_id": case.case_id,
             "scenario": case.scenario.value,
             "case_date": case.case_date.isoformat(),
-            "client_information": case.client_information.model_dump_json(),
+            "client_information": case.client_information.model_dump_json(exclude_none=True),
             "conversation_history": json.dumps(
                 [m.model_dump(mode="json") for m in case.conversation_history], ensure_ascii=False
             ),
@@ -39,6 +39,10 @@ async def run_batch(
             row.update(
                 {f"output_{i}": text for i, text in enumerate(result.candidates.messages, 1)}
             )
+            row.update({f"angle_{i}": a.name for i, a in enumerate(result.plan.angles, 1)})
+            # The resolved client card, so the export shows who the client is, not just an ID.
+            row["client_information"] = result.pack.client.model_dump_json()
+            row["warnings"] = "；".join(result.warnings)
             row["status"] = "success"
             print(
                 f"{case.case_id}: success ({sum(u.requests for u in result.usage)} requests)",
@@ -75,6 +79,10 @@ async def run_batch(
         "output_1",
         "output_2",
         "output_3",
+        "angle_1",
+        "angle_2",
+        "angle_3",
+        "warnings",
         "status",
         "error_type",
     ]
@@ -86,7 +94,6 @@ async def run_batch(
         "completed_at": datetime.now(UTC).isoformat(),
         "model": workflow.model_name,
         "configuration_hash": workflow.data.configuration_hash,
-        "max_product_queries": workflow.max_product_queries,
         "concurrency": concurrency,
         "total": len(cases),
         "success": sum(r["status"] == "success" for r in results),

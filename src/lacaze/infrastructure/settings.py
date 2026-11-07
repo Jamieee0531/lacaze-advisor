@@ -21,9 +21,6 @@ class Settings(BaseSettings):
         default=Path(__file__).resolve().parents[3] / "data",
         validation_alias="LACAZE_DATA_DIR",
     )
-    max_product_queries: int = Field(
-        default=2, ge=0, le=5, validation_alias="LACAZE_MAX_PRODUCT_QUERIES"
-    )
     request_timeout_seconds: float = Field(
         default=180, gt=0, validation_alias="LACAZE_REQUEST_TIMEOUT_SECONDS"
     )

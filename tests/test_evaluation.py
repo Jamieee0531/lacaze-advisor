@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from lacaze.application.preparation import prepare
 from lacaze.evaluation import calibration, checks, pipeline, report
 from lacaze.evaluation.loader import load_run
 from lacaze.evaluation.materials import load_materials
@@ -46,7 +47,7 @@ def judgment_payload(case_id: str, answers: list[dict], distinct: bool = True) -
 
 def write_run(directory: Path, cases, messages_by_case: dict, version: str) -> Path:
     directory.mkdir(parents=True)
-    foundation = RuntimeData.load(DATA_DIR).foundation
+    data = RuntimeData.load(DATA_DIR)
     by_id = {c.case_id: c for c in cases}
     for case_id, messages in messages_by_case.items():
         case = by_id[case_id]
@@ -60,7 +61,7 @@ def write_run(directory: Path, cases, messages_by_case: dict, version: str) -> P
                 "app_version": version,
                 "model": "generator-model",
                 "configuration_hash": f"hash-{version}",
-                "facts": foundation.resolve(case.product_information).model_dump(mode="json"),
+                "pack": prepare(case, data).model_dump(mode="json"),
                 "candidates": {"messages": messages},
             },
             "provenance": {"source_run": f"source-{version}"},
@@ -140,7 +141,9 @@ def test_loader_reads_versions_facts_and_skips_failed_records(run_dir):
     assert c02.app_version == "0.2.0"
     assert c02.configuration_hash == "hash-0.2.0"
     assert c02.source_run == "source-0.2.0"
-    assert {p.product_id for p in c02.facts.products} == {"odette", "margaux", "sable"}
+    fact_ids = {f.fact_id for f in c02.facts}
+    assert {"odette.price_cny", "margaux.price_cny", "p0006"} <= fact_ids  # specs and purchases
+    assert c02.client["salutation"] == "林女士"
     assert c02.messages == tuple(C02_MESSAGES)
 
 

@@ -5,7 +5,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
-from lacaze.domain.models import CaseInput, ClientTier, ProductInformation, SuppliedFact
+from lacaze.domain.models import CaseInput, ClientTier
 from lacaze.infrastructure.catalog import ProductCatalog
 
 
@@ -126,61 +126,8 @@ class Foundation:
                     raise ValueError(
                         f"{case.case_id}: client_information.{field} disagrees with clients.json"
                     )
-        try:
-            self.resolve(case.product_information)
-        except ValueError as exc:
-            raise ValueError(f"{case.case_id}: {exc}") from exc
-
-    def resolve(self, info: ProductInformation) -> ProductInformation:
-        """Expand product and event IDs into the facts the model may use."""
-        unknown = [pid for pid in info.product_ids if pid not in self.catalog.products]
-        if unknown:
-            raise ValueError(f"Unknown product IDs: {unknown}")
+        info = case.product_information
+        if unknown := [pid for pid in info.product_ids if pid not in self.catalog.products]:
+            raise ValueError(f"{case.case_id}: Unknown product IDs: {unknown}")
         if info.event_id and info.event_id not in self.events:
-            raise ValueError(f"Unknown event ID: {info.event_id}")
-        products = {p.product_id: p for p in info.products}
-        products |= {pid: self.catalog.products[pid] for pid in info.product_ids}
-        event_facts = list(info.event_facts)
-        if info.event_id:
-            event_facts += self._event_facts(self.events[info.event_id])
-        return info.model_copy(
-            update={
-                "products": list(products.values()),
-                "event_facts": event_facts,
-                "service_facts": list(info.service_facts) + self._service_facts(),
-            }
-        )
-
-    def _event_facts(self, event: Event) -> list[SuppliedFact]:
-        store = self.stores[event.store].name
-        items = {
-            "name": f"活动名称：{event.name}",
-            "time": f"时间：{_chinese_date(event.date)} {event.time}",
-            "store": f"地点：{store}",
-            "audience": f"参加范围：{event.audience}",
-            "content": f"内容：{event.content}",
-            "appointment": f"接待安排：{event.appointment}",
-            "not_included": f"不包含：{'、'.join(event.not_included)}",
-            "note": event.note,
-        }
-        return [SuppliedFact(fact_id=f"{event.event_id}.{k}", text=v) for k, v in items.items()]
-
-    def _service_facts(self) -> list[SuppliedFact]:
-        facts = [
-            SuppliedFact(
-                fact_id=s.service_id,
-                text=f"{s.name}：{s.description}适用：{s.eligibility}；办理：{s.how}",
-            )
-            for s in self.services
-        ]
-        for group in ("pricing", "channels", "allocation"):
-            facts += [
-                SuppliedFact(fact_id=f"policy_{group}_{i}", text=text)
-                for i, text in enumerate(getattr(self.policies, group), 1)
-            ]
-        return facts
-
-
-def _chinese_date(iso: str) -> str:
-    year, month, day = (int(part) for part in iso.split("-"))
-    return f"{year}年{month}月{day}日"
+            raise ValueError(f"{case.case_id}: Unknown event ID: {info.event_id}")

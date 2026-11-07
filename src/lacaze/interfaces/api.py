@@ -4,7 +4,8 @@ from fastapi import FastAPI, HTTPException
 
 from lacaze import __version__
 from lacaze.application.workflow import AdvisorWorkflow
-from lacaze.domain.models import CaseInput, GenerationResult, Scenario
+from lacaze.domain.models import CaseInput, Scenario
+from lacaze.domain.result import GenerationResult
 from lacaze.infrastructure.data import RuntimeData
 from lacaze.infrastructure.provider import create_model
 from lacaze.infrastructure.settings import Settings
@@ -18,7 +19,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
             settings = Settings()
             data = RuntimeData.load(settings.data_dir)
             model, client = create_model(settings)
-            app.state.workflow = AdvisorWorkflow(model, data, settings.max_product_queries)
+            app.state.workflow = AdvisorWorkflow(model, data)
         else:
             app.state.workflow = workflow
         try:

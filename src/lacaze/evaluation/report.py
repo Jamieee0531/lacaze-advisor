@@ -206,9 +206,9 @@ def _context(case: EvalCase) -> str:
         if client_messages
         else "无客户历史消息"
     )
-    info = case.input.client_information
+    name, salutation = case.client.get("name", ""), case.client.get("salutation")
     return (
-        f'<div class="ctx">{escape_text(info.name)}（{escape_text(info.salutation or "未记录称呼")}）'
+        f'<div class="ctx">{escape_text(name)}（{escape_text(salutation or "未记录称呼")}）'
         f" · 业务日期 {case.case_date.isoformat()}<br>{latest}</div>"
     )
 
@@ -305,22 +305,15 @@ def render_blind_review(cases: list[EvalCase]) -> str:
             f"<li>[{m.date.isoformat()}] {ROLE_NAMES[m.role]}：{escape_text(m.text)}</li>"
             for m in case.input.conversation_history
         ) or "<li>无历史消息</li>"
-        facts = case.facts
-        fact_items = [
-            f"{escape_text(p.name)}：{p.price_cny:,} 元；{escape_text('、'.join(p.features))}"
-            for p in facts.products
-        ]
-        fact_items += [escape_text(f.text) for f in facts.event_facts + facts.service_facts]
-        fact_items += [f"未提供：{escape_text(t)}" for t in facts.unavailable_information]
-        facts_html = "".join(f"<li>{t}</li>" for t in fact_items) or "<li>无</li>"
+        facts_html = "".join(f"<li>{escape_text(f.text)}</li>" for f in case.facts) or "<li>无</li>"
         messages = "".join(
             f'<div class="msg">话术 {i}<div class="text">{escape_text(t)}</div></div>'
             for i, t in enumerate(case.messages, 1)
         )
-        info = case.input.client_information
+        name, salutation = case.client.get("name", ""), case.client.get("salutation")
         blocks.append(
             f'<div class="case"><h3>{escape_text(case.case_id)} · {escape_text(case.scenario.value)}</h3>'
-            f'<div class="sub">{escape_text(info.name)}（{escape_text(info.salutation or "")}）· '
+            f'<div class="sub">{escape_text(name)}（{escape_text(salutation or "")}）· '
             f"业务日期 {case.case_date.isoformat()}</div>"
             f'<div class="ctx"><b>对话历史</b><ul>{history}</ul><b>可用事实</b><ul>{facts_html}</ul></div>'
             f"{messages}</div>"

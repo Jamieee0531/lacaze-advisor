@@ -28,6 +28,7 @@ class RuntimeData:
     foundation: Foundation
     loading: LoadingTable
     prompts: dict[str, str]
+    writer_examples: dict[str, str]
     configuration_hash: str
     source_files: dict[str, str]
 
@@ -45,9 +46,9 @@ class RuntimeData:
             "foundation/clients/purchases.json",
             "foundation/brand/calendar.json",
             "context/loading.json",
-            "prompts/extract.md",
-            "prompts/decide.md",
-            "prompts/generate.md",
+            "prompts/plan.md",
+            "prompts/write.md",
+            "prompts/writer_examples.json",
         ]
         raw = {path: (directory / path).read_text(encoding="utf-8") for path in paths}
         brand = BrandPolicy.model_validate_json(raw[paths[0]])
@@ -74,10 +75,18 @@ class RuntimeData:
             catalog,
             foundation,
             LoadingTable.model_validate_json(raw[paths[10]]),
-            {name: raw[f"prompts/{name}.md"] for name in ["extract", "decide", "generate"]},
+            {name: raw[f"prompts/{name}.md"] for name in ["plan", "write"]},
+            _writer_examples(raw["prompts/writer_examples.json"]),
             digest,
             raw,
         )
+
+
+def _writer_examples(text: str) -> dict[str, str]:
+    examples = {k: v for k, v in json.loads(text).items() if not k.startswith("_")}
+    if set(examples) != {s.value for s in Scenario}:
+        raise ValueError("writer_examples.json needs exactly one example per scenario")
+    return examples
 
 
 def _by_id(records: list, key: str) -> dict:

@@ -19,79 +19,77 @@ def cases():
 
 
 class ScriptedModel:
-    """Exercises real PydanticAI orchestration, not model quality. No network."""
+    """Exercises real PydanticAI orchestration, not model quality. No network.
 
-    def __init__(self, *, use_tools=True, corrupt_evidence=False):
-        self.use_tools = use_tools
-        self.corrupt_evidence = corrupt_evidence
-        self.seen = []
+    `plan_fault` / `draft_fault` make the first answer of that stage break a code check,
+    or every answer when `persistent=True`, to exercise retry and warnings.
+    """
+
+    def __init__(self, *, plan_fault=None, draft_fault=None, persistent=False):
+        self.plan_fault = plan_fault
+        self.draft_fault = draft_fault
+        self.persistent = persistent
+        self.seen = []  # (stage, payload, instructions)
         self.model = FunctionModel(self.respond, model_name="offline-test-model")
 
     def respond(self, messages, info):
         prompts = [p.content for m in messages for p in m.parts if isinstance(p, UserPromptPart)]
-        payload = json.loads(prompts[-1])
+        payload = json.loads(prompts[0])
+        instructions = info.instructions or ""
+        is_retry = len(messages) > 1
+        fault_now = self.persistent or not is_retry
         schema = info.output_tools[0].parameters_json_schema["properties"]
-        salutation = payload["client_information"]["salutation"]
-        if "needs_and_preferences" in schema:
-            stage = "extraction"
-            original = payload["conversation_history"][0]
-            output = {
-                "needs_and_preferences": ["Preserve the current request."],
-                "conversation_state": "Continue the existing conversation.",
-                "relationship_and_style": ["Use the explicit salutation."],
-                "relevant_product_names": [],
-                "evidence": [
-                    {
-                        "message_id": original["message_id"],
-                        "quote": "fabricated quotation"
-                        if self.corrupt_evidence
-                        else original["text"],
-                    }
-                ],
-                "information_gaps": [],
-                "conflicts": [],
-            }
-        elif "objective" in schema:
-            stage = "decision"
-            if self.use_tools and info.function_tools:
-                self.seen.append((stage, payload, "tool"))
-                return ModelResponse(
-                    parts=[
-                        ToolCallPart(
-                            "query_products",
-                            {
-                                "names": ["Odette"],
-                                "requested_fields": ["compartments"],
-                            },
-                        )
-                    ]
-                )
-            output = {
-                "objective": "Continue the conversation without inventing facts.",
-                "content_focus": ["Respond to the expressed need."],
-                "personalization_basis": [{"detail": "Relevant history", "message_ids": ["m001"]}],
-                "communication_strategy": {
-                    "salutation": salutation,
-                    "tone": "restrained",
-                    "approach": "respectful",
-                    "next_step": None,
-                },
-                "fact_boundaries": {
-                    "product_ids": ["odette"] if self.use_tools else [],
-                    "service_and_event_fact_ids": [],
-                    "missing_information": ["compartments"],
-                    "prohibited_claims": ["Do not invent compartments."],
-                    "advisor_notes": [],
-                },
-            }
+        if "angles" in schema:
+            stage, output = "planner", self._plan(payload, fault_now)
         else:
-            stage = "generation"
-            output = {
-                "messages": [
-                    f"{salutation}，这两款可以先了解一下。",
-                    f"{salutation}，先接着您上次提到的需求聊聊。",
-                    f"{salutation}，您可以按自己的节奏慢慢看。",
-                ]
-            }
-        self.seen.append((stage, payload, "output"))
+            stage, output = "writer", self._drafts(payload, fault_now)
+        self.seen.append((stage, payload, instructions))
         return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, output)])
+
+    def _plan(self, payload, fault_now):
+        history = [m["message_id"] for m in payload["conversation_history"]]
+        facts = [f["fact_id"] for f in payload["facts"]]
+        sub_type = "超预算" if payload["scenario"] == "Price objection" else None
+        cited = [history[-1:], history[-2:-1] or history[-1:], []]
+        angles = [
+            {
+                "name": name,
+                "purpose": "回应客户最近的话",
+                "message_ids": cited[i],
+                "fact_ids": facts[i : i + 1],
+                "next_step": None,
+            }
+            for i, name in enumerate(["回应近况", "接着上次", "留出余地"])
+        ]
+        if fault_now and self.plan_fault == "unknown_fact":
+            angles[0]["fact_ids"] = ["made_up_fact"]
+        return {
+            "situation": "客户在等顾问回复",
+            "sub_type": sub_type or self.sub_type_for(payload["scenario"]),
+            "avoid": ["不催促"],
+            "angles": angles,
+            "missing": [],
+        }
+
+    @staticmethod
+    def sub_type_for(scenario):
+        return {
+            "Birthday and festive greetings": "生日",
+            "Product recommendation": "比较候选",
+            "Post-purchase care": "使用请求",
+            "Reactivation": "单纯问候",
+            "Event invitation": "首次邀请",
+        }[scenario]
+
+    def _drafts(self, payload, fault_now):
+        salutation = payload["salutation"]
+        texts = ["这两款可以先了解一下。", "先接着您上次提到的需求聊聊。", "您可以按自己的节奏慢慢看。"]
+        drafts = [
+            {"angle": a["angle"], "text": f"{salutation}，{text}", "fact_ids": []}
+            for a, text in zip(payload["angles"], texts, strict=True)
+        ]
+        if fault_now and self.draft_fault == "foreign_fact":
+            drafts[0]["fact_ids"] = ["not_in_this_angle"]
+        if fault_now and self.draft_fault == "made_up_price":
+            drafts[1]["text"] = f"{salutation}，这只现在是七万五。"
+        return {"drafts": drafts}

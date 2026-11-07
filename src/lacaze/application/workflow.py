@@ -7,36 +7,38 @@ from pydantic_ai.usage import UsageLimits
 
 from lacaze import __version__
 from lacaze.application.agents import RunDependencies, create_agents
-from lacaze.domain.models import CaseInput, GenerationResult, StageUsage
+from lacaze.application.fact_text import WEEKDAYS
+from lacaze.application.preparation import prepare
+from lacaze.domain.models import CandidateMessages, CaseInput, StageUsage
+from lacaze.domain.pack import CasePack
+from lacaze.domain.plan import Plan
+from lacaze.domain.result import GenerationResult
 from lacaze.infrastructure.data import RuntimeData
+
+# One call plus one retry with feedback per stage.
+REQUEST_LIMIT = 2
 
 
 class AdvisorWorkflow:
-    """One public operation: validated case -> context, decision and three drafts."""
+    """Case -> preparation (rules) -> Planner -> Writer -> three drafts with angle notes."""
 
-    def __init__(self, model: Model, data: RuntimeData, max_product_queries: int = 2):
+    def __init__(self, model: Model, data: RuntimeData):
         self.model_name = model.model_name
         self.data = data
-        self.max_product_queries = max_product_queries
-        self.extractor, self.decider, self.writer = create_agents(model, data)
+        self.planner, self.writer = create_agents(model, data)
 
     async def generate(self, case: CaseInput) -> GenerationResult:
         started_at = datetime.now(UTC)
-        # Run-local state: facts and tools must never leak between clients or requests.
-        deps = RunDependencies(
-            case=case,
-            data=self.data,
-            max_product_queries=self.max_product_queries,
-            facts=self.data.foundation.resolve(case.product_information),
-        )
+        pack = prepare(case, self.data)
+        deps = RunDependencies(pack=pack, data=self.data)
         usage: list[StageUsage] = []
 
-        async def run_stage(agent, stage: str, payload: dict, request_limit: int):
+        async def run_stage(agent, stage: str, payload: dict):
             start = perf_counter()
             result = await agent.run(
-                json.dumps(payload, ensure_ascii=False),
+                json.dumps(payload, ensure_ascii=False, indent=1),
                 deps=deps,
-                usage_limits=UsageLimits(request_limit=request_limit),
+                usage_limits=UsageLimits(request_limit=REQUEST_LIMIT),
             )
             counters = result.usage
             usage.append(
@@ -50,47 +52,8 @@ class AdvisorWorkflow:
             )
             return result.output
 
-        # Scenario is already a validated enum; no classifier model is needed.
-        resolved_case = {
-            **case.model_dump(mode="json"),
-            "product_information": deps.facts.model_dump(mode="json"),
-        }
-        deps.context = await run_stage(self.extractor, "extraction", resolved_case, 2)
-        common = {
-            "case_id": case.case_id,
-            "scenario": case.scenario.value,
-            "case_date": case.case_date.isoformat(),
-            "client_information": case.client_information.model_dump(mode="json"),
-        }
-        deps.decision = await run_stage(
-            self.decider,
-            "decision",
-            {
-                **common,
-                "context": deps.context.model_dump(mode="json"),
-                "product_information": deps.facts.model_dump(mode="json"),
-                "max_product_queries": self.max_product_queries,
-            },
-            self.max_product_queries + 3,
-        )
-
-        selected_ids = {
-            message_id
-            for basis in deps.decision.personalization_basis
-            for message_id in basis.message_ids
-        }
-        evidence = [e for e in deps.context.evidence if e.message_id in selected_ids]
-        candidates = await run_stage(
-            self.writer,
-            "generation",
-            {
-                **common,
-                "decision": deps.decision.model_dump(mode="json"),
-                "history_evidence": [e.model_dump(mode="json") for e in evidence],
-                "product_information": deps.facts.model_dump(mode="json"),
-            },
-            2,
-        )
+        deps.plan = await run_stage(self.planner, "planner", planner_payload(pack))
+        drafts = await run_stage(self.writer, "writer", writer_payload(pack, deps.plan))
         return GenerationResult(
             case_id=case.case_id,
             scenario=case.scenario,
@@ -100,11 +63,55 @@ class AdvisorWorkflow:
             configuration_hash=self.data.configuration_hash,
             started_at=started_at,
             finished_at=datetime.now(UTC),
-            context=deps.context,
-            decision=deps.decision,
-            evidence_for_generation=evidence,
-            facts=deps.facts,
-            product_queries=deps.queries,
-            candidates=candidates,
+            pack=pack,
+            plan=deps.plan,
+            drafts=drafts.drafts,
+            candidates=CandidateMessages(messages=[d.text for d in drafts.drafts]),
+            warnings=deps.warnings,
             usage=usage,
         )
+
+
+def _history(pack: CasePack) -> list[dict]:
+    return [m.model_dump(mode="json") for m in pack.history]
+
+
+def _business_date(pack: CasePack) -> str:
+    return f"{pack.case_date.isoformat()}（星期{WEEKDAYS[pack.case_date.weekday()]}）"
+
+
+def planner_payload(pack: CasePack) -> dict:
+    return {
+        "scenario": pack.scenario.value,
+        "business_date": _business_date(pack),
+        "client": pack.client.model_dump(mode="json"),
+        "conversation_history": _history(pack),
+        "facts": [f.model_dump(mode="json", exclude_none=True) for f in pack.facts],
+        "program_notes": pack.notes,
+    }
+
+
+def writer_payload(pack: CasePack, plan: Plan) -> dict:
+    """The Writer sees the whole history but only the facts each angle cites."""
+    messages = {m.message_id: m for m in pack.history}
+    facts = pack.facts_by_id()
+    angles = [
+        {
+            "angle": i,
+            "name": a.name,
+            "purpose": a.purpose,
+            "quotes": [messages[m].model_dump(mode="json") for m in a.message_ids],
+            "facts": [{"fact_id": f, "text": facts[f].text} for f in a.fact_ids],
+            "next_step": a.next_step,
+        }
+        for i, a in enumerate(plan.angles, 1)
+    ]
+    return {
+        "salutation": pack.client.salutation,
+        "business_date": _business_date(pack),
+        "conversation_history": _history(pack),
+        "situation": plan.situation,
+        "avoid": plan.avoid,
+        "missing": plan.missing,
+        "angles": angles,
+    }

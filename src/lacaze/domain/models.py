@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime
-from datetime import date as CalendarDate
+from datetime import date
 from enum import StrEnum
 from typing import Annotated, Literal
 
@@ -194,64 +193,6 @@ class ScenarioPolicy(Contract):
     writer_rules: list[str]
 
 
-class Evidence(Contract):
-    message_id: str
-    quote: str = Field(min_length=1, description="Exact substring of the cited history message.")
-    role: Literal["client", "advisor"] | None = Field(
-        default=None, description="Filled authoritatively from the cited input message."
-    )
-    date: CalendarDate | None = Field(
-        default=None, description="Filled authoritatively from the cited input message."
-    )
-
-
-class CaseContext(Contract):
-    needs_and_preferences: list[str]
-    conversation_state: str
-    relationship_and_style: list[str]
-    relevant_product_names: list[str]
-    evidence: list[Evidence]
-    information_gaps: list[str]
-    conflicts: list[str]
-
-
-class PersonalizationBasis(Contract):
-    detail: str
-    message_ids: list[str] = Field(
-        description="IDs from CaseContext.evidence, empty for direct identity facts."
-    )
-
-
-class CommunicationStrategy(Contract):
-    salutation: str
-    tone: str
-    approach: str
-    next_step: str | None
-
-
-class FactBoundaries(Contract):
-    product_ids: list[str] = Field(
-        description="Canonical product_id values from supplied or queried products, e.g. odette."
-    )
-    service_and_event_fact_ids: list[str] = Field(
-        description="Only fact_id values from product_information.event_facts or service_facts. "
-        "Use [] if these lists are empty. Never put product IDs, product attributes, or prices here."
-    )
-    missing_information: list[str]
-    prohibited_claims: list[str]
-    advisor_notes: list[str] = Field(
-        description="Internal notes; never copy internal data/tool terminology to a client."
-    )
-
-
-class CommunicationDecision(Contract):
-    objective: str
-    content_focus: list[str]
-    personalization_basis: list[PersonalizationBasis]
-    communication_strategy: CommunicationStrategy
-    fact_boundaries: FactBoundaries
-
-
 class CandidateMessages(Contract):
     messages: Annotated[list[str], Field(min_length=3, max_length=3)]
 
@@ -266,39 +207,9 @@ class CandidateMessages(Contract):
         return cleaned
 
 
-class ProductQueryResult(Contract):
-    products: list[Product]
-    unknown_names: list[str]
-    unavailable_fields: dict[str, list[str]]
-
-
-class ProductQueryRecord(Contract):
-    names: list[str]
-    requested_fields: list[str]
-    result: ProductQueryResult
-
-
 class StageUsage(Contract):
-    stage: Literal["extraction", "decision", "generation"]
+    stage: Literal["planner", "writer"]
     duration_seconds: float
     requests: int
     input_tokens: int
     output_tokens: int
-
-
-class GenerationResult(Contract):
-    case_id: str
-    scenario: Scenario
-    case_date: date
-    app_version: str
-    model: str
-    configuration_hash: str
-    started_at: datetime
-    finished_at: datetime
-    context: CaseContext
-    decision: CommunicationDecision
-    evidence_for_generation: list[Evidence]
-    facts: ProductInformation
-    product_queries: list[ProductQueryRecord]
-    candidates: CandidateMessages
-    usage: list[StageUsage]

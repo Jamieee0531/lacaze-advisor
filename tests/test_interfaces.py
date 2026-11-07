@@ -4,12 +4,13 @@ from fastapi.testclient import TestClient
 
 from lacaze.application.batch import run_batch
 from lacaze.application.workflow import AdvisorWorkflow
+from lacaze.domain.models import ClientInformation
 from lacaze.interfaces.api import create_app
 from tests.conftest import ScriptedModel
 
 
 def test_http_validates_case_and_returns_same_workflow(data, cases):
-    workflow = AdvisorWorkflow(ScriptedModel(use_tools=False).model, data)
+    workflow = AdvisorWorkflow(ScriptedModel().model, data)
     with TestClient(create_app(workflow)) as client:
         assert len(client.get("/scenarios").json()) == 6
         payload = cases[0].model_dump(mode="json")
@@ -21,7 +22,7 @@ def test_http_validates_case_and_returns_same_workflow(data, cases):
 
 
 async def test_batch_preserves_inputs_and_outputs_without_quality_scores(data, cases, tmp_path):
-    workflow = AdvisorWorkflow(ScriptedModel(use_tools=False).model, data)
+    workflow = AdvisorWorkflow(ScriptedModel().model, data)
     directory = tmp_path / "run"
     summary = await run_batch(workflow, cases[:2], directory, concurrency=2)
     assert summary["success"] == 2
@@ -35,9 +36,11 @@ async def test_batch_preserves_inputs_and_outputs_without_quality_scores(data, c
 
 
 async def test_batch_records_failure_without_fabricating_candidates(data, cases, tmp_path):
-    workflow = AdvisorWorkflow(ScriptedModel(corrupt_evidence=True).model, data)
+    workflow = AdvisorWorkflow(ScriptedModel().model, data)
     directory = tmp_path / "failed-run"
-    summary = await run_batch(workflow, cases[:2], directory)
+    unknown = ClientInformation(client_id="cl999")  # no record and nothing inline
+    broken = [c.model_copy(update={"client_information": unknown}) for c in cases[:2]]
+    summary = await run_batch(workflow, broken, directory)
     assert summary["error"] == 2
     for cid in ["C01", "C02"]:
         record = json.loads((directory / f"{cid}.json").read_text())
