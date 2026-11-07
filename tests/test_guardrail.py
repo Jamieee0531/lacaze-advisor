@@ -118,3 +118,15 @@ def test_internal_fact_in_an_angle_is_a_problem(data, cases):
     pack = prepare(cases[6], data)
     plan = plan_with(["ev_classic_details_2611.not_included"])
     assert any("内部事实" in p for p in plan_problems(plan, pack, data))
+
+
+def test_english_leaking_into_chinese_is_a_problem(data, cases):
+    found = problems_for("林女士，谢谢您仍然 considering Odette。", data, cases[1])
+    assert any("considering" in p for p in found)
+    assert not any("Odette" in p for p in found)  # product names from the facts are fine
+
+
+def test_service_is_split_into_what_and_how(data, cases):
+    facts = prepare(cases[3], data).facts_by_id()
+    assert "约 7 天" not in facts["sv_annual_care"].text
+    assert "约 7 天" in facts["sv_annual_care.how"].text

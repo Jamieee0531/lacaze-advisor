@@ -16,6 +16,7 @@ from lacaze.infrastructure.data import RuntimeData
 
 SCOPE_KINDS = {"product", "purchase", "event"}
 EXCLAMATION = re.compile(r"[!！]")
+LATIN_WORD = re.compile(r"[A-Za-zÀ-ÿ]{3,}")
 
 
 def draft_problems(drafts: Drafts, pack: CasePack, plan: Plan, data: RuntimeData) -> list[str]:
@@ -69,6 +70,11 @@ def _hard(draft: Draft, pack: CasePack, plan: Plan, data: RuntimeData) -> list[s
     internal += re.findall(config.internal_id_pattern, text)
     if internal:
         problems.append(f"出现了内部信息 {internal}，不能对客户说")
+    # Latin words are allowed only when the brand, history or facts use them (product names,
+    # "Box" leather); anything else is English leaking into a Chinese message.
+    known = {w.casefold() for w in LATIN_WORD.findall(joined + " " + data.brand.name)}
+    if foreign := sorted({w for w in LATIN_WORD.findall(text) if w.casefold() not in known}):
+        problems.append(f"混入了英文 {foreign}，请全部用中文表达")
     salutation = pack.client.salutation
     if salutation and salutation not in text:
         problems.append(f"没有使用称呼「{salutation}」")

@@ -34,7 +34,8 @@ def prepare(case: CaseInput, data: RuntimeData) -> CasePack:
         for p in purchases
     ]
     services = {s.service_id: s for s in f.services}
-    facts += [fact_text.service_fact(services[sid]) for sid in rule.services]
+    for sid in rule.services:
+        facts += fact_text.service_facts(services[sid])
     facts += _policy_facts(rule, f, product_ids)
     for event in events:
         facts += fact_text.event_facts(event, f.stores[event.store].name, case.case_date)

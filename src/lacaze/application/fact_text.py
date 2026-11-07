@@ -83,12 +83,21 @@ def purchase_fact(purchase: Purchase, product: Product, today: date) -> Supplied
     )
 
 
-def service_fact(service: Service) -> SuppliedFact:
-    return SuppliedFact(
-        fact_id=service.service_id,
-        text=f"{service.name}：{service.description}适用：{service.eligibility}；办理：{service.how}",
-        kind="service",
-    )
+def service_facts(service: Service) -> list[SuppliedFact]:
+    """What the service is, and separately how to get it, so a message can mention the
+    service without reciting the procedure."""
+    return [
+        SuppliedFact(
+            fact_id=service.service_id,
+            text=f"{service.name}：{service.description}",
+            kind="service",
+        ),
+        SuppliedFact(
+            fact_id=f"{service.service_id}.how",
+            text=f"{service.name}的办理：适用于{service.eligibility}；{service.how}",
+            kind="service",
+        ),
+    ]
 
 
 def event_facts(event: Event, store_name: str, today: date) -> list[SuppliedFact]:
