@@ -42,6 +42,7 @@ def planner_instructions(ctx: RunContext[RunDependencies]) -> str:
                     "objective": policy.objective,
                     "sub_types": policy.sub_types,
                     "rules": policy.planner_rules,
+                    "wording_rules_for_the_writer": policy.writer_rules,
                 }
             ),
         ]
@@ -56,8 +57,7 @@ def writer_instructions(ctx: RunContext[RunDependencies]) -> str:
         [
             data.prompts["write"],
             "## 品牌\n" + _dump(brand.model_dump(exclude={"version"})),
-            "## 本场景\n"
-            + _dump({"objective": policy.objective, "rules": policy.writer_rules}),
+            "## 本场景\n" + _dump({"objective": policy.objective, "rules": policy.writer_rules}),
             "## 写法参考（虚构示例，只参考语气和长度，不要使用其中的内容）\n" + example,
         ]
     )

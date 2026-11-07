@@ -5,6 +5,7 @@ product or event ID becomes a note for the Planner instead of an error.
 """
 
 from datetime import date, timedelta
+from fnmatch import fnmatch
 
 from lacaze.application import fact_text
 from lacaze.domain.models import CaseInput, ClientTier, SuppliedFact
@@ -42,6 +43,13 @@ def prepare(case: CaseInput, data: RuntimeData) -> CasePack:
         facts += _calendar_facts(case.case_date, client.birthday, windows, f)
     if rule.last_contact:
         facts.append(_last_contact_fact(case))
+    patterns = data.loading.internal_facts.patterns
+    facts = [
+        f.model_copy(update={"internal": True})
+        if any(fnmatch(f.fact_id, p) for p in patterns)
+        else f
+        for f in facts
+    ]
     return CasePack(
         case_id=case.case_id,
         scenario=case.scenario,

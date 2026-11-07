@@ -123,6 +123,10 @@ class SuppliedFact(Contract):
     fact_id: str
     text: str
     kind: FactKind | None = None
+    internal: bool = Field(
+        default=False,
+        description="For judgement only: the Planner sees it, the client never hears it.",
+    )
 
 
 class ProductInformation(Contract):

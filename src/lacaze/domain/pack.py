@@ -52,7 +52,12 @@ class LoadingRule(Contract):
     last_contact: bool
 
 
+class InternalFacts(Contract):
+    patterns: list[str]
+
+
 class LoadingTable(Contract):
+    internal_facts: InternalFacts
     windows: LoadingWindows
     scenarios: list[LoadingRule]
 

@@ -58,7 +58,8 @@ class AdvisorWorkflow:
             return result.output
 
         deps.plan = await run_stage(self.planner, "planner", planner_payload(pack))
-        drafts = await run_stage(self.writer, "writer", writer_payload(pack, deps.plan))
+        rules = self.data.scenarios[pack.scenario].writer_rules
+        drafts = await run_stage(self.writer, "writer", writer_payload(pack, deps.plan, rules))
         deps.warnings += soft_warnings(drafts, pack, self.data)
         return GenerationResult(
             case_id=case.case_id,
@@ -87,18 +88,23 @@ def _business_date(pack: CasePack) -> str:
     return f"{pack.case_date.isoformat()}（星期{WEEKDAYS[pack.case_date.weekday()]}）"
 
 
+def _fact(fact) -> dict:
+    return fact.model_dump(mode="json", exclude_none=True, exclude={"internal"})
+
+
 def planner_payload(pack: CasePack) -> dict:
     return {
         "scenario": pack.scenario.value,
         "business_date": _business_date(pack),
         "client": pack.client.model_dump(mode="json"),
         "conversation_history": _history(pack),
-        "facts": [f.model_dump(mode="json", exclude_none=True) for f in pack.facts],
+        "facts": [_fact(f) for f in pack.facts if not f.internal],
+        "internal_facts_for_judgement_only": [_fact(f) for f in pack.facts if f.internal],
         "program_notes": pack.notes,
     }
 
 
-def writer_payload(pack: CasePack, plan: Plan) -> dict:
+def writer_payload(pack: CasePack, plan: Plan, wording_rules: list[str]) -> dict:
     """The Writer sees the whole history but only the facts each angle cites."""
     messages = {m.message_id: m for m in pack.history}
     facts = pack.facts_by_id()
@@ -118,6 +124,7 @@ def writer_payload(pack: CasePack, plan: Plan) -> dict:
         "salutation": pack.client.salutation,
         "business_date": _business_date(pack),
         "conversation_history": _history(pack),
+        "wording_rules": wording_rules,
         "situation": plan.situation,
         "avoid": plan.avoid,
         "missing": plan.missing,

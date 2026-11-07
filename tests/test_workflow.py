@@ -27,6 +27,19 @@ async def test_planner_sees_pack_and_writer_sees_only_cited_facts(data, cases):
     assert not result.warnings
 
 
+async def test_internal_facts_reach_the_planner_only(data, cases):
+    scripted = ScriptedModel()
+    await AdvisorWorkflow(scripted.model, data).generate(cases[6])  # event invitation
+    plan_input = stage_payloads(scripted, "planner")[0]
+    internal = {f["fact_id"] for f in plan_input["internal_facts_for_judgement_only"]}
+    assert "ev_classic_details_2611.not_included" in internal
+    assert "ev_classic_details_2611.eligibility" in internal
+    assert not internal & {f["fact_id"] for f in plan_input["facts"]}
+    write_input = stage_payloads(scripted, "writer")[0]
+    assert "not_included" not in str(write_input)
+    assert write_input["wording_rules"] == data.scenarios[cases[6].scenario].writer_rules
+
+
 async def test_instructions_are_layered_by_scenario(data, cases):
     scripted = ScriptedModel()
     await AdvisorWorkflow(scripted.model, data).generate(cases[9])  # price objection
@@ -34,7 +47,8 @@ async def test_instructions_are_layered_by_scenario(data, cases):
     (writer_text,) = [t for s, _, t in scripted.seen if s == "writer"]
     price = data.scenarios[cases[9].scenario]
     assert price.planner_rules[0] in planner_text and price.planner_rules[0] not in writer_text
-    assert price.writer_rules[0] in writer_text and price.writer_rules[0] not in planner_text
+    # Wording rules reach the Writer, and the Planner too so its points never contradict them.
+    assert price.writer_rules[0] in writer_text and price.writer_rules[0] in planner_text
     assert data.brand.tone[0] in writer_text and data.brand.tone[0] not in planner_text
     assert data.brand.rules[0] in planner_text and data.brand.rules[0] in writer_text
 

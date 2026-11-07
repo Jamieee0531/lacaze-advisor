@@ -84,7 +84,11 @@ class ScriptedModel:
 
     def _drafts(self, payload, fault_now):
         salutation = payload["salutation"]
-        texts = ["这两款可以先了解一下。", "先接着您上次提到的需求聊聊。", "您可以按自己的节奏慢慢看。"]
+        texts = [
+            "这两款可以先了解一下。",
+            "先接着您上次提到的需求聊聊。",
+            "您可以按自己的节奏慢慢看。",
+        ]
         drafts = [
             {"angle": a["angle"], "text": f"{salutation}，{text}", "fact_ids": []}
             for a, text in zip(payload["angles"], texts, strict=True)

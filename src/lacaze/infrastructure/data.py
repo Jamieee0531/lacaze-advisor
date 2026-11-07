@@ -77,13 +77,26 @@ class RuntimeData:
             scenarios,
             catalog,
             foundation,
-            LoadingTable.model_validate_json(raw[paths[10]]),
+            LoadingTable.model_validate_json(_without_notes(raw[paths[10]])),
             _guardrail(raw["context/guardrail.json"], raw["evaluation/checks.json"]),
             {name: raw[f"prompts/{name}.md"] for name in ["plan", "write"]},
             _writer_examples(raw["prompts/writer_examples.json"]),
             digest,
             raw,
         )
+
+
+def _without_notes(text: str) -> str:
+    """JSON config files may carry "_note" keys for humans; drop them before validation."""
+
+    def strip(value):
+        if isinstance(value, dict):
+            return {k: strip(v) for k, v in value.items() if not k.startswith("_")}
+        if isinstance(value, list):
+            return [strip(v) for v in value]
+        return value
+
+    return json.dumps(strip(json.loads(text)))
 
 
 def _guardrail(own: str, shared: str) -> GuardrailConfig:

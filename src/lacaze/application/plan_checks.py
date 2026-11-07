@@ -13,11 +13,16 @@ def plan_problems(plan: Plan, pack: CasePack, data: RuntimeData) -> list[str]:
     message_ids = {m.message_id for m in pack.history}
     fact_ids = {f.fact_id for f in pack.facts}
     purchase_ids = {f.fact_id for f in pack.facts if f.kind == "purchase"}
+    internal_ids = {f.fact_id for f in pack.facts if f.internal}
     for i, angle in enumerate(plan.angles, 1):
         if unknown := sorted(set(angle.message_ids) - message_ids):
             problems.append(f"角度 {i} 引用了不存在的对话编号 {unknown}")
         if unknown := sorted(set(angle.fact_ids) - fact_ids):
             problems.append(f"角度 {i} 引用了不存在的事实 ID {unknown}")
+        if internal := sorted(set(angle.fact_ids) & internal_ids):
+            problems.append(
+                f"角度 {i} 的 fact_ids 里有只供判断的内部事实 {internal}，请移出，需要时体现在 avoid 里"
+            )
         limit = data.guardrail.max_facts_per_angle
         if len(angle.fact_ids) > limit:
             problems.append(
@@ -40,7 +45,7 @@ def plan_problems(plan: Plan, pack: CasePack, data: RuntimeData) -> list[str]:
 def sanitize_plan(plan: Plan, pack: CasePack) -> Plan:
     """Drop citations that do not exist, so the Writer never sees an unverifiable source."""
     message_ids = {m.message_id for m in pack.history}
-    fact_ids = {f.fact_id for f in pack.facts}
+    fact_ids = {f.fact_id for f in pack.facts if not f.internal}
     angles = [
         a.model_copy(
             update={

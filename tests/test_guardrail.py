@@ -110,3 +110,11 @@ def test_angle_must_rest_on_this_clients_words_or_purchases(data, cases):
     problems = plan_problems(plan, pack, data)
     assert any(p.startswith("角度 1 没有落在这位客户身上") for p in problems)
     assert not any(p.startswith("角度 2 没有落在") for p in problems)
+
+
+def test_internal_fact_in_an_angle_is_a_problem(data, cases):
+    from lacaze.application.plan_checks import plan_problems
+
+    pack = prepare(cases[6], data)
+    plan = plan_with(["ev_classic_details_2611.not_included"])
+    assert any("内部事实" in p for p in plan_problems(plan, pack, data))
