@@ -21,10 +21,11 @@ def render_history(case: EvalCase) -> str:
     )
 
 
-def render_facts(case: EvalCase) -> str:
-    if not case.facts:
+def render_facts(case: EvalCase, internal: bool = False) -> str:
+    facts = [f for f in case.facts if f.internal == internal]
+    if not facts:
         return "（无）"
-    return "\n".join(f"- `{f.fact_id}` {f.text}" for f in case.facts)
+    return "\n".join(f"- `{f.fact_id}` {f.text}" for f in facts)
 
 
 def render_packet(case: EvalCase, materials: EvaluationMaterials, judge_model: str) -> str:
@@ -46,9 +47,10 @@ def render_packet(case: EvalCase, materials: EvaluationMaterials, judge_model: s
         + _json_block(case.client),
         "### 对话历史（按时间顺序）\n\n" + render_history(case),
         "## 可用事实\n\n"
-        "生成话术时工具实际可见的全部事实（含客户的购买记录）。"
-        "层级、累计消费和资格判断是内部信息，不应出现在话术中。\n\n"
+        "生成话术时可以告诉客户的事实（含客户的购买记录）。"
+        "客户卡片里的层级和累计消费是内部信息，不应出现在话术中。\n\n"
         + render_facts(case),
+        "### 内部事实（只用于判断，不能告诉客户）\n\n" + render_facts(case, internal=True),
         "---\n\n## 三条候选话术\n\n" + messages,
         "---\n\n## 输出格式\n\n"
         f"- `case_id` 填写：`{case.case_id}`\n"

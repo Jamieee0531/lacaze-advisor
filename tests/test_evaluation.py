@@ -244,6 +244,15 @@ def test_prepare_writes_blind_packets_with_policies_and_generation_facts(run_dir
         pipeline.prepare(run_dir, eval_dir, DATA_DIR, JUDGE_MODEL)
 
 
+def test_packet_separates_internal_facts(run_dir, tmp_path):
+    eval_dir = tmp_path / "eval"
+    pipeline.prepare(run_dir, eval_dir, DATA_DIR, JUDGE_MODEL)
+    packet = (eval_dir / "packets/C10.md").read_text()
+    usable, internal = packet.split("### 内部事实")
+    assert "`policy_pricing_2`" in internal and "`policy_pricing_2`" not in usable
+    assert "`policy_pricing_1`" in usable
+
+
 def test_collect_validates_judgments_and_computes_summary(run_dir, tmp_path):
     eval_dir = tmp_path / "eval"
     pipeline.prepare(run_dir, eval_dir, DATA_DIR, JUDGE_MODEL)
