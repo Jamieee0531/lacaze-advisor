@@ -1,5 +1,6 @@
 {
-  "_note": "Runtime checks on drafts. Banned and discount phrases are shared with evaluation (data/evaluation/checks.json).",
+  "_note": "Runtime code checks on plans and drafts. Banned and discount phrases are shared with evaluation (data/evaluation/checks.json).",
+  "max_facts_per_angle": 4,
   "max_chars": 200,
   "internal_terms": [
     "VVIP",

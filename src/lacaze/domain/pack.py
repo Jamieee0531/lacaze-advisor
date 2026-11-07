@@ -69,6 +69,7 @@ class LoadingTable(Contract):
 class GuardrailConfig(Contract):
     """data/context/guardrail.json plus the phrase lists shared with evaluation."""
 
+    max_facts_per_angle: int = Field(gt=0)
     max_chars: int = Field(gt=0)
     internal_terms: list[str]
     internal_id_pattern: str

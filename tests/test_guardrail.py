@@ -79,3 +79,21 @@ async def test_made_up_price_is_retried_then_reported_if_it_persists(data, cases
     result = await AdvisorWorkflow(always.model, data).generate(cases[1])
     assert "七万五" in result.candidates.messages[1]  # returned for the CA to see, not dropped
     assert any("价格" in w for w in result.warnings)
+
+
+def test_plan_citing_too_many_facts_is_a_problem(data, cases):
+    from lacaze.application.plan_checks import plan_problems
+
+    pack = prepare(cases[1], data)
+    many = [f.fact_id for f in pack.facts][: data.guardrail.max_facts_per_angle + 1]
+    plan = plan_with(many)
+    plan = plan.model_copy(
+        update={
+            "angles": [
+                a.model_copy(update={"message_ids": [f"m00{i}"]})
+                for i, a in enumerate(plan.angles, 1)
+            ]
+        }
+    )
+    problems = plan_problems(plan, pack, data)
+    assert len([p for p in problems if "最多" in p]) == 3

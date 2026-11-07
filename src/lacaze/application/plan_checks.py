@@ -17,6 +17,11 @@ def plan_problems(plan: Plan, pack: CasePack, data: RuntimeData) -> list[str]:
             problems.append(f"角度 {i} 引用了不存在的对话编号 {unknown}")
         if unknown := sorted(set(angle.fact_ids) - fact_ids):
             problems.append(f"角度 {i} 引用了不存在的事实 ID {unknown}")
+        limit = data.guardrail.max_facts_per_angle
+        if len(angle.fact_ids) > limit:
+            problems.append(
+                f"角度 {i} 引用了 {len(angle.fact_ids)} 条事实，最多 {limit} 条，请只留最相关的"
+            )
         if (message_ids or fact_ids) and not (angle.message_ids or angle.fact_ids):
             problems.append(f"角度 {i} 没有任何依据，请引用对话编号或事实 ID")
     names = [a.name.strip() for a in plan.angles]
