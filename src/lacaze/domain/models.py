@@ -184,9 +184,14 @@ class BrandPolicy(Contract):
 
 
 class ScenarioPolicy(Contract):
+    """Planner rules are judgement (what situation is this, what may be offered);
+    writer rules are wording. Sub-types are the situations the Planner chooses from."""
+
     scenario: Scenario
     objective: str
-    rules: list[str]
+    sub_types: list[str] = Field(min_length=1)
+    planner_rules: list[str]
+    writer_rules: list[str]
 
 
 class Evidence(Contract):
