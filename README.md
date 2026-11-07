@@ -83,7 +83,7 @@ All JSON field names are English. Chinese text is preserved in names, history an
 
 `case_date` is required and is the simulated business date. The system never substitutes today's machine date. Actual API timestamps appear only in run metadata. History is chronological, with unique `message_id` values and no message after `case_date`.
 
-Identity fields are optional except `name`; unknown is `null`. `annual_spend` records `amount_cny`, `as_of`, and whether the amount is `approximate`. It is annual spending, not lifetime spending.
+Identity fields are optional except `name`; unknown is `null`. `client_id` links the client to the store's purchase records (`data/foundation/purchases.json`). `cumulative_spend` records lifetime LACAZE spend (`amount_cny`, `as_of`, `approximate`), derived from those records; tiers are based on it. `annual_spend` is a legacy v0.1.x field kept only so earlier artifacts remain readable.
 
 `product_information` contains `products`, `event_facts`, `service_facts`, and `unavailable_information`. An event or service fact has `fact_id` and `text`. This preserves current confirmed arrangements without inventing a large event-management schema. A catalog lookup cannot book an appointment or confirm a service.
 

@@ -30,13 +30,16 @@ class ClientTier(StrEnum):
     VVIP = "VVIP"
 
 
-class AnnualSpend(Contract):
+class SpendAmount(Contract):
     amount_cny: float = Field(ge=0)
     as_of: date
     approximate: bool = False
 
 
 class ClientInformation(Contract):
+    client_id: str | None = Field(
+        default=None, description="Key into the store's purchase records, e.g. cl004."
+    )
     name: str = Field(min_length=1)
     salutation: str | None = None
     gender: Literal["female", "male", "other"] | None = None
@@ -46,7 +49,12 @@ class ClientInformation(Contract):
         default=None, description="Known birthday as MM-DD; null means unknown."
     )
     tier: ClientTier | None = None
-    annual_spend: AnnualSpend | None = None
+    cumulative_spend: SpendAmount | None = Field(
+        default=None, description="Lifetime LACAZE spend, derived from purchase records."
+    )
+    annual_spend: SpendAmount | None = Field(
+        default=None, description="Legacy v0.1.x field, kept only to read earlier artifacts."
+    )
 
     @field_validator("birthday")
     @classmethod
@@ -119,9 +127,10 @@ class CaseInput(Contract):
             raise ValueError("History must be chronological")
         if any(d > self.case_date for d in dates):
             raise ValueError("History cannot occur after case_date")
-        spend = self.client_information.annual_spend
-        if spend and spend.as_of > self.case_date:
-            raise ValueError("annual_spend.as_of cannot be after case_date")
+        info = self.client_information
+        for spend in (info.cumulative_spend, info.annual_spend):
+            if spend and spend.as_of > self.case_date:
+                raise ValueError("spend as_of cannot be after case_date")
         return self
 
 

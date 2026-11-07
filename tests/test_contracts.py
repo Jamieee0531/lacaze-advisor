@@ -12,7 +12,8 @@ def test_development_cases_preserve_scenarios_dates_and_unknowns(cases):
     assert cases[0].case_date == date(2026, 11, 6)
     assert cases[0].client_information.birthday == "11-06"
     assert cases[1].client_information.birthday is None
-    assert cases[2].client_information.annual_spend.amount_cny == 0
+    assert cases[2].client_information.cumulative_spend.amount_cny == 0
+    assert cases[0].client_information.client_id == "cl004"
 
 
 @pytest.mark.parametrize(
