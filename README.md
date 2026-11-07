@@ -2,7 +2,7 @@
 
 Private development project for the Artefact written challenge. LACAZE, all clients, products, services and events are fictional. The recruitment PDF and screenshots stay local.
 
-The application takes a case and generates three Chinese WeChat drafts for a Client Advisor. It uses **PydanticAI 2.65**, **Pydantic 2**, **Python 3.13.13** and the Anthropic API (default model `claude-opus-5-5`). There is no database, vector retrieval, automated message sending or model fallback.
+The application takes a case and generates three Chinese WeChat drafts for a Client Advisor. It uses **PydanticAI 2.65**, **Pydantic 2**, **Python 3.13.13** and the Anthropic API (default model `claude-sonnet-5-5`). There is no database, vector retrieval, automated message sending or model fallback.
 
 ## Run locally
 

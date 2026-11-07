@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", populate_by_name=True)
 
     model_name: str = Field(
-        default="claude-opus-5-5",
+        default="claude-sonnet-5-5",
         validation_alias=AliasChoices("LACAZE_MODEL", "ANTHROPIC_MODEL"),
     )
     # None means the official Anthropic API; set it only for a proxy.

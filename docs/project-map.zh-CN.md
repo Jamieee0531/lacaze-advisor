@@ -117,7 +117,7 @@ uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 
 ## API 配置边界
 
-程序读取 `ANTHROPIC_API_KEY`（或代理用的 `ANTHROPIC_AUTH_TOKEN`）；模型名称优先使用 `LACAZE_MODEL`，默认 `claude-opus-5-5`。不设 `ANTHROPIC_BASE_URL` 时直接连接 Anthropic 官方 API；只有走代理时才需要设置它。
+程序读取 `ANTHROPIC_API_KEY`（或代理用的 `ANTHROPIC_AUTH_TOKEN`）；模型名称优先使用 `LACAZE_MODEL`，默认 `claude-sonnet-5-5`。不设 `ANTHROPIC_BASE_URL` 时直接连接 Anthropic 官方 API；只有走代理时才需要设置它。
 
 API key 需要在 Claude Console（platform.claude.com）单独充值后创建，Claude app 的套餐额度不是 API key。把 `.env.example` 复制为 `.env` 并填入即可。
 
