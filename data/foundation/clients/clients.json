@@ -42,5 +42,71 @@
     "birthday": "11-06",
     "home_store": "shanghai_chengyuan",
     "client_since": "2024-11-23"
+  },
+  {
+    "client_id": "cl005",
+    "name": "陈哲",
+    "salutation": "陈先生",
+    "gender": "male",
+    "age": 42,
+    "occupation": "律所合伙人",
+    "birthday": "03-12",
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2025-09-06"
+  },
+  {
+    "client_id": "cl006",
+    "name": "周屹",
+    "salutation": "周先生",
+    "gender": "male",
+    "age": 33,
+    "occupation": "互联网产品经理",
+    "birthday": null,
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2026-02-08"
+  },
+  {
+    "client_id": "cl007",
+    "name": "沈立",
+    "salutation": "沈先生",
+    "gender": "male",
+    "age": 58,
+    "occupation": "企业创始人",
+    "birthday": "12-28",
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2022-03-19"
+  },
+  {
+    "client_id": "cl008",
+    "name": "许安然",
+    "salutation": "许小姐",
+    "gender": "female",
+    "age": 27,
+    "occupation": "独立设计师",
+    "birthday": "12-03",
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2026-10-25"
+  },
+  {
+    "client_id": "cl009",
+    "name": "顾文秀",
+    "salutation": "顾老师",
+    "gender": "female",
+    "age": 63,
+    "occupation": "退休大学教授",
+    "birthday": "01-20",
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2023-04-15"
+  },
+  {
+    "client_id": "cl010",
+    "name": "王爱米",
+    "salutation": "Emily",
+    "gender": "female",
+    "age": 31,
+    "occupation": "咨询顾问",
+    "birthday": "07-08",
+    "home_store": "shanghai_chengyuan",
+    "client_since": "2026-05-16"
   }
 ]

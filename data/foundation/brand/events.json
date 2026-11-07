@@ -8,9 +8,57 @@
     "audience": "VIC 及以上客户，预约参加",
     "min_tier": "VIC",
     "content": "围绕 Margaux 与 Véronique 的设计细节进行介绍，可看实物、试背，并与顾问交流。",
-    "featured_products": ["margaux", "veronique"],
+    "featured_products": [
+      "margaux",
+      "veronique"
+    ],
     "appointment": "可预约约 20 分钟的一对一交流；意向时段 14:00 或 15:30，须经门店确认。",
-    "not_included": ["赠礼", "折扣", "额外购买资格或配货权益"],
+    "not_included": [
+      "赠礼",
+      "折扣",
+      "额外购买资格或配货权益"
+    ],
     "note": "参加活动与取得商品购买配额是不同事项。"
+  },
+  {
+    "event_id": "ev_winter_care_2612",
+    "name": "LACAZE 冬季皮具护理分享会",
+    "date": "2026-12-12",
+    "time": "14:00–16:00",
+    "store": "shanghai_chengyuan",
+    "audience": "已在 LACAZE 购买过作品的客户，预约参加",
+    "min_tier": "Prospect",
+    "content": "讲解小牛皮和颗粒面皮料在干燥季节的日常保养，可携带自己的 LACAZE 手袋，由工坊同事现场演示基础清洁。",
+    "featured_products": [
+      "sable",
+      "odette"
+    ],
+    "appointment": "每位约 30 分钟；意向时段 14:00 或 15:00，须经门店确认。",
+    "not_included": [
+      "维修",
+      "赠品",
+      "折扣"
+    ],
+    "note": "现场演示不替代年度免费基础护理，送店护理仍按原服务办理。"
+  },
+  {
+    "event_id": "ev_heritage_preview_2701",
+    "name": "Héritage 定制私享会",
+    "date": "2027-01-16",
+    "time": "15:00–18:00",
+    "store": "shanghai_chengyuan",
+    "audience": "VVIP 客户，受邀参加",
+    "min_tier": "VVIP",
+    "content": "介绍 Héritage 的定制流程，以及可选的皮料、五金和内衬，可看样品并与工坊同事交流。",
+    "featured_products": [
+      "heritage"
+    ],
+    "appointment": "一对一交流约 45 分钟；意向时段 15:00 或 16:30，须经门店确认。",
+    "not_included": [
+      "购买配额保证",
+      "定制订单确认",
+      "折扣"
+    ],
+    "note": "参加私享会不代表获得 Héritage 购买配额，配额仍按配货政策判断。"
   }
 ]
