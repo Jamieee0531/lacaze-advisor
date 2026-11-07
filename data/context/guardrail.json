@@ -1,0 +1,17 @@
+{
+  "_note": "Runtime checks on drafts. Banned and discount phrases are shared with evaluation (data/evaluation/checks.json).",
+  "max_chars": 200,
+  "internal_terms": [
+    "VVIP",
+    "VIC",
+    "Prospect",
+    "Unclassified",
+    "层级",
+    "累计消费",
+    "消费金额",
+    "资料库",
+    "系统里"
+  ],
+  "internal_id_pattern": "(?<![A-Za-z0-9_])(?:m\\d{3}|p\\d{4}|sv_[a-z_]+|ev_[a-z0-9_]+|policy_[a-z]+_\\d+|calendar\\.|contact\\.)",
+  "similar_drafts_threshold": 0.6
+}

@@ -6,7 +6,7 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from lacaze.domain.models import BrandPolicy, CaseInput, Product, Scenario, ScenarioPolicy
-from lacaze.domain.pack import LoadingTable
+from lacaze.domain.pack import GuardrailConfig, LoadingTable
 from lacaze.infrastructure.catalog import ProductCatalog
 from lacaze.infrastructure.foundation import (
     CalendarDay,
@@ -27,6 +27,7 @@ class RuntimeData:
     catalog: ProductCatalog
     foundation: Foundation
     loading: LoadingTable
+    guardrail: GuardrailConfig
     prompts: dict[str, str]
     writer_examples: dict[str, str]
     configuration_hash: str
@@ -46,6 +47,8 @@ class RuntimeData:
             "foundation/clients/purchases.json",
             "foundation/brand/calendar.json",
             "context/loading.json",
+            "context/guardrail.json",
+            "evaluation/checks.json",
             "prompts/plan.md",
             "prompts/write.md",
             "prompts/writer_examples.json",
@@ -75,11 +78,22 @@ class RuntimeData:
             catalog,
             foundation,
             LoadingTable.model_validate_json(raw[paths[10]]),
+            _guardrail(raw["context/guardrail.json"], raw["evaluation/checks.json"]),
             {name: raw[f"prompts/{name}.md"] for name in ["plan", "write"]},
             _writer_examples(raw["prompts/writer_examples.json"]),
             digest,
             raw,
         )
+
+
+def _guardrail(own: str, shared: str) -> GuardrailConfig:
+    config = {k: v for k, v in json.loads(own).items() if not k.startswith("_")}
+    phrases = json.loads(shared)
+    return GuardrailConfig(
+        **config,
+        banned_phrases=phrases["banned_phrases"],
+        discount_terms=phrases["discount_terms"],
+    )
 
 
 def _writer_examples(text: str) -> dict[str, str]:

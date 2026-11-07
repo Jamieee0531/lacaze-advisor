@@ -8,6 +8,7 @@ from pydantic_ai.usage import UsageLimits
 from lacaze import __version__
 from lacaze.application.agents import RunDependencies, create_agents
 from lacaze.application.fact_text import WEEKDAYS
+from lacaze.application.guardrail import soft_warnings
 from lacaze.application.preparation import prepare
 from lacaze.domain.models import CandidateMessages, CaseInput, StageUsage
 from lacaze.domain.pack import CasePack
@@ -54,6 +55,7 @@ class AdvisorWorkflow:
 
         deps.plan = await run_stage(self.planner, "planner", planner_payload(pack))
         drafts = await run_stage(self.writer, "writer", writer_payload(pack, deps.plan))
+        deps.warnings += soft_warnings(drafts, pack, self.data)
         return GenerationResult(
             case_id=case.case_id,
             scenario=case.scenario,

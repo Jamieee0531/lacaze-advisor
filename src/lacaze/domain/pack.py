@@ -66,6 +66,17 @@ class LoadingTable(Contract):
         return next(r for r in self.scenarios if r.scenario == scenario)
 
 
+class GuardrailConfig(Contract):
+    """data/context/guardrail.json plus the phrase lists shared with evaluation."""
+
+    max_chars: int = Field(gt=0)
+    internal_terms: list[str]
+    internal_id_pattern: str
+    similar_drafts_threshold: float = Field(gt=0, le=1)
+    banned_phrases: list[str]
+    discount_terms: list[str]
+
+
 class ClientCard(Contract):
     """Internal view of the client. Tier and spend are for the Planner, never for the client."""
 
