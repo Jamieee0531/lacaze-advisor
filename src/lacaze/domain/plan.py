@@ -12,9 +12,10 @@ from lacaze.domain.models import Contract
 
 class Angle(Contract):
     name: str = Field(min_length=1, description="几个字的角度名，给 CA 看，例如「回应预算」")
-    purpose: str = Field(min_length=1, description="这条消息要达成什么、到哪里为止")
+    point: str = Field(min_length=1, description="这条消息要让客户记住的一个核心意思，一句平实的话")
+    purpose: str = Field(min_length=1, description="这条消息要达成什么、讲到哪里为止；不写具体措辞")
     message_ids: list[str] = Field(description="依据的对话编号，例如 m009")
-    fact_ids: list[str] = Field(description="这条消息可以使用的事实 ID；不需要事实时为空")
+    fact_ids: list[str] = Field(description="支撑要点、可以告诉客户的事实 ID；不需要时为空")
     next_step: str | None = Field(description="可选的下一步；不需要时为 null")
 
 

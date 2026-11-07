@@ -6,7 +6,7 @@ from tests.conftest import ScriptedModel
 
 
 def plan_with(fact_ids):
-    angle = {"purpose": "回应", "message_ids": ["m001"], "next_step": None}
+    angle = {"point": "回应", "purpose": "回应", "message_ids": ["m001"], "next_step": None}
     return Plan(
         situation="客户在比较",
         sub_type="比较候选",
@@ -97,3 +97,16 @@ def test_plan_citing_too_many_facts_is_a_problem(data, cases):
     )
     problems = plan_problems(plan, pack, data)
     assert len([p for p in problems if "最多" in p]) == 3
+
+
+def test_angle_must_rest_on_this_clients_words_or_purchases(data, cases):
+    from lacaze.application.plan_checks import plan_problems
+
+    pack = prepare(cases[1], data)
+    plan = plan_with(["sv_private_viewing"])
+    generic = plan.angles[0].model_copy(update={"message_ids": []})
+    owned = plan.angles[1].model_copy(update={"message_ids": [], "fact_ids": ["p0006"]})
+    plan = plan.model_copy(update={"angles": [generic, owned, plan.angles[2]]})
+    problems = plan_problems(plan, pack, data)
+    assert any(p.startswith("角度 1 没有落在这位客户身上") for p in problems)
+    assert not any(p.startswith("角度 2 没有落在") for p in problems)

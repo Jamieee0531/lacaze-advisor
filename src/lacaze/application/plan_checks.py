@@ -12,6 +12,7 @@ def plan_problems(plan: Plan, pack: CasePack, data: RuntimeData) -> list[str]:
         problems.append(f"sub_type 只能是 {sub_types} 之一")
     message_ids = {m.message_id for m in pack.history}
     fact_ids = {f.fact_id for f in pack.facts}
+    purchase_ids = {f.fact_id for f in pack.facts if f.kind == "purchase"}
     for i, angle in enumerate(plan.angles, 1):
         if unknown := sorted(set(angle.message_ids) - message_ids):
             problems.append(f"角度 {i} 引用了不存在的对话编号 {unknown}")
@@ -22,8 +23,9 @@ def plan_problems(plan: Plan, pack: CasePack, data: RuntimeData) -> list[str]:
             problems.append(
                 f"角度 {i} 引用了 {len(angle.fact_ids)} 条事实，最多 {limit} 条，请只留最相关的"
             )
-        if (message_ids or fact_ids) and not (angle.message_ids or angle.fact_ids):
-            problems.append(f"角度 {i} 没有任何依据，请引用对话编号或事实 ID")
+        personal = set(angle.message_ids) & message_ids or set(angle.fact_ids) & purchase_ids
+        if (message_ids or purchase_ids) and not personal:
+            problems.append(f"角度 {i} 没有落在这位客户身上，请引用她的对话或购买记录")
     names = [a.name.strip() for a in plan.angles]
     if len(set(names)) != 3:
         problems.append("三个角度的名称重复")

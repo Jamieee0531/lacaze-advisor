@@ -12,6 +12,7 @@ PART_TITLES = {
     "tool-call": "模型输出",
     "text": "模型输出",
     "retry-prompt": "代码检查的反馈（触发重试）",
+    "retry-feedback": "代码检查的反馈（触发重试）",
     "tool-return": "代码检查结果",
 }
 
@@ -62,6 +63,8 @@ def render(record: dict) -> str:
     for angle, draft in zip(result["plan"]["angles"], result["drafts"], strict=True):
         lines += [
             f"**{draft['angle']}. {angle['name']}**（用到 {draft['fact_ids'] or '无'}）",
+            "",
+            f"要点：{angle.get('point', '—')}",
             "",
             f"> {draft['text']}",
             "",

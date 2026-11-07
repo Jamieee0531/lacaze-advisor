@@ -50,10 +50,11 @@ class ScriptedModel:
         history = [m["message_id"] for m in payload["conversation_history"]]
         facts = [f["fact_id"] for f in payload["facts"]]
         sub_type = "超预算" if payload["scenario"] == "Price objection" else None
-        cited = [history[-1:], history[-2:-1] or history[-1:], []]
+        cited = [history[-1:], history[-2:-1] or history[-1:], history[:1]]
         angles = [
             {
                 "name": name,
+                "point": "接着她最近说的话回应",
                 "purpose": "回应客户最近的话",
                 "message_ids": cited[i],
                 "fact_ids": facts[i : i + 1],

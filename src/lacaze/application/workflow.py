@@ -106,6 +106,7 @@ def writer_payload(pack: CasePack, plan: Plan) -> dict:
         {
             "angle": i,
             "name": a.name,
+            "point": a.point,
             "purpose": a.purpose,
             "quotes": [messages[m].model_dump(mode="json") for m in a.message_ids],
             "facts": [{"fact_id": f, "text": facts[f].text} for f in a.fact_ids],
