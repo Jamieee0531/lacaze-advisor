@@ -2,13 +2,12 @@
 
 核对日期：2026-11-04。以下根据当前源代码及保存的运行记录整理；旧文档中的“本机”指之前的开发电脑。
 
-## 从哪里开始看
+## 从哪里开始看（v0.2）
 
-- `docs/existing-results-v0.1.2.zh-CN.md`：已有十例、三十条实际生成话术的中文阅读版。
-- `artifacts/review-v0.1.2/outputs.csv`：输入与三条输出的汇总表。
-- `artifacts/review-v0.1.2/C02.json`：适合跟读的数据流实例，包含一次真实产品查询。
 - `src/lacaze/application/workflow.py`：完整编排，是理解程序的主要入口。
-- `docs/implementation.md`：旧开发过程、修改原因和已知问题。
+- `data/context/loading.json`：场景 × 数据加载表，决定每个场景带哪些数据。
+- `data/prompts/plan.md`、`data/prompts/write.md`：Planner 和 Writer 的指令。
+- `docs/existing-results-v0.1.2.zh-CN.md`：v0.1.2 的十例、三十条话术，作为改动前的对照。
 
 ## 运行时数据来源
 
@@ -16,63 +15,69 @@
 
 | 运行文件 | 用途 |
 | --- | --- |
-| `data/cases/development.jsonl` | 十条结构化案例，每行一条；身份、历史、业务日期、商品/活动/服务事实 |
-| `data/foundation/` | 数据基建：品牌规则、场景规则、产品库、门店服务、政策、活动、节日、客户与消费记录，见其中的 README |
-| `data/prompts/extract.md` | 提取阶段的指令 |
-| `data/prompts/decide.md` | 决策阶段的指令 |
-| `data/prompts/generate.md` | 写作阶段的指令 |
+| `data/cases/development.jsonl` | 开发集，十条案例：场景、业务日期、客户 ID、对话历史、商品和活动 ID |
+| `data/foundation/` | 数据基建：品牌、场景规则、商品、服务、政策、活动、节日、客户与消费记录，见其中的 README |
+| `data/context/loading.json` | 场景 × 数据加载表：每个场景带哪些商品字段、服务、政策、活动、节日、上次联系 |
+| `data/context/guardrail.json` | 对话术的代码校验：长度上限、内部词；禁用说法与评估共用 `data/evaluation/checks.json` |
+| `data/prompts/plan.md` / `write.md` | Planner / Writer 的指令 |
+| `data/prompts/writer_examples.json` | 每个场景一条虚构的写法参考 |
 
-修改 reference 不会自动更新运行配置，需要人工保持两者一致。
+已知客户只写 `client_id`，身份、累计消费、层级和购买记录都从 foundation 计算。新客户可以把称呼等信息直接写在 `client_information` 里，此时视为没有消费记录。
 
 ## 数据流
 
 ```mermaid
 flowchart TD
-    A[CLI 单例 / 批量脚本 / HTTP 请求] --> B[CaseInput 校验]
-    B --> C[Extraction Agent 提取上下文]
-    C --> D[CaseContext 需求、对话状态、原文证据、信息缺口]
-    D --> E[Decision Agent 制定沟通策略]
-    E <--> F[query_products 本地产品库 默认最多两次]
-    E --> G[CommunicationDecision 五字段策略]
-    G --> H[Python 选择策略引用的聊天证据]
-    H --> I[Generation Agent 生成三条独立候选]
-    I --> J[GenerationResult 完整结果]
-    J --> K[CLI / HTTP 返回；批量另存 JSON 与 CSV]
-    P[品牌规则与对应场景规则] --> C
-    P --> E
-    P --> I
+    A[CLI / 批量 / HTTP] --> B[CaseInput 校验]
+    B --> C[准备节点 Python：按加载表取数据并计算]
+    C --> D[事实包 CasePack：客户卡片、完整对话、带 ID 的事实、备注]
+    D --> E[Planner：状态、子类型、avoid、三个角度、missing]
+    E --> F{代码检查计划}
+    F -- 有问题，重试一次 --> E
+    F --> G[Writer：三条消息，每个角度只拿它引用的事实]
+    G --> H{代码校验消息}
+    H -- 有问题，重试一次 --> G
+    H --> I[GenerationResult：三条消息、角度说明、事实包、计划、警告]
+    P1[品牌规则] --> E
+    P1 --> G
+    P2[场景判断规则] --> E
+    P3[场景措辞规则与写法参考] --> G
 ```
 
-三个 Agent 使用同一个配置的模型，由 Python 固定顺序编排；不是三个独立后台服务。没有数据库、向量检索、前端或微信发送动作。
+这是固定顺序的 workflow，不是自主 agent：路由由场景决定，没有工具调用，每个 LLM 环节一次调用，加最多一次带反馈的重试。
 
-1. **输入校验**：固定六类场景、显式业务日期、历史按日期排列、消息 ID 唯一，历史不可晚于案例日期。场景由输入指定，不调用模型分类。
-2. **上下文提取**：读取完整案例，提取需求、当前对话状态、关系/表达方式、相关产品、原文证据、信息缺口与矛盾。代码核对证据确实是原消息的子串，并从原消息补回说话人和日期。此阶段不重建永久客户档案。
-3. **沟通决策**：读取提取结果、身份信息和产品事实，输出 `objective`、`content_focus`、`personalization_basis`、`communication_strategy`、`fact_boundaries`。只有此 Agent 能调用 `query_products`。
-4. **产品查询**：仅查本地 JSON，可合并查询多款商品及多个字段。案例提供的商品快照优先于目录；未知尺寸、重量等保持未知。不能预约、预留商品或确认权益。
-5. **话术生成**：读取决策、所引用的聊天证据、原始身份资料、提供/查得的事实和规则；不读取完整聊天或完整提取结果。一次输出三条互为备选的话术。
-6. **保存**：批量程序保存原始输入、提取结果、决策、选中证据、商品查询、三条消息、版本、配置哈希及分阶段 token/请求数。
-
-当前硬校验能检查结构、引用和 ID、三条文本互不相同且包含中文；不能保证语义正确、风格合适或三条差异足够大。没有独立的评审 Agent。
+1. **准备（Python）**：按 `loading.json` 取本场景要用的数据：
+   - 商品只取 case 给出的、活动介绍的、对话里提到的几款，并且只取本场景需要的字段；客户已有的款以购买记录的形式出现。
+   - 服务和政策按场景筛选，配货规则只在涉及配额款时才带。
+   - 计算累计消费、层级、距购买天数、活动资格、生日和节日距今天数、上次联系。
+   - 对生成宽松：认不出的商品或活动 ID 记为备注，交给 Planner。`validate-data` 对测试集仍然严格。
+2. **Planner**：看到客户卡片（含内部层级）、完整对话、全部事实。输出客户状态、子类型、avoid、三个角度（引用的对话编号和事实 ID）和 missing。代码检查编号和 ID 存在、子类型合法、三个角度的依据不同。
+3. **Writer**：看到称呼、完整对话、计划，每个角度只看到它引用的事实；引用的原话由代码按编号取出。一次写三条。
+4. **校验（Python）**：
+   - 硬问题：价格、日期、时间不在事实中，提到不相关的商品，内部词，禁用说法，缺称呼，超过 200 字，用了别的角度的事实。出现硬问题会重试一次，仍有问题时照常返回并附警告，由 CA 把关。
+   - 软警告：感叹号，非价格场景出现折扣词，三条太相似。只提示，不重试。
 
 ## 代码分工
 
 | 路径 | 职责 |
 | --- | --- |
-| `src/lacaze/domain/models.py` | Pydantic 输入、中间结果、输出结构与校验 |
-| `src/lacaze/application/workflow.py` | 三阶段编排和各阶段输入组装 |
-| `src/lacaze/application/agents.py` | Agent 定义、规则注入、工具与证据校验 |
-| `src/lacaze/application/batch.py` | 批量执行、并发限制、成功/失败落盘 |
-| `src/lacaze/infrastructure/data.py` | 加载配置、案例及计算配置哈希 |
-| `src/lacaze/infrastructure/catalog.py` | 本地产品查询及事实来源优先级 |
-| `src/lacaze/infrastructure/settings.py` | 环境变量与 `.env` 配置 |
-| `src/lacaze/infrastructure/provider.py` | Anthropic 兼容客户端连接 |
-| `src/lacaze/interfaces/cli.py` | validate-data / generate / batch 命令 |
-| `src/lacaze/interfaces/api.py` | FastAPI health / scenarios / generate 接口 |
-| `scripts/run_cases.py` | 为 CLI 自动补上 batch 子命令的便捷入口 |
+| `src/lacaze/domain/models.py` | 输入、规则、三条候选的结构与校验 |
+| `src/lacaze/domain/pack.py` | 事实包、客户卡片、加载表、校验配置 |
+| `src/lacaze/domain/plan.py` / `result.py` | Planner 与 Writer 输出；完整结果 |
+| `src/lacaze/domain/text.py` | 价格、日期、时间、商品名识别，运行时与评估共用 |
+| `src/lacaze/application/preparation.py` | 准备节点 |
+| `src/lacaze/application/fact_text.py` | 把 foundation 记录写成一条条中文事实 |
+| `src/lacaze/application/agents.py` | Planner / Writer 定义与分层指令 |
+| `src/lacaze/application/plan_checks.py` / `guardrail.py` | 计划检查、消息校验 |
+| `src/lacaze/application/workflow.py` | 编排，以及 Planner / Writer 的输入 |
+| `src/lacaze/application/batch.py` | 批量执行与导出 |
+| `src/lacaze/infrastructure/` | 读取数据、foundation 查询、配置、模型连接 |
+| `src/lacaze/interfaces/` | CLI 与 FastAPI |
+| `src/lacaze/evaluation/` | 评估：评审材料、代码检查、汇总与报告 |
 
 ## 两类测试要分清
 
-**离线工程测试**：`tests/` 使用 FunctionModel 模拟模型返回，但实际执行 Agent 编排和工具循环；检查输入、证据、工具预算、请求隔离、API、批量导出和失败记录。不需要 key，不评估中文话术质量。
+**离线工程测试**：`tests/` 使用 FunctionModel 模拟模型返回，但实际执行编排、重试和校验；检查准备节点、分层指令、引用与校验、重试后的警告、请求隔离、API、批量导出和失败记录。不需要 key，不评估中文话术质量。
 
 **实际案例运行**：`scripts/run_cases.py` 或 `lacaze batch` 使用配置的大模型，需要有效服务地址、模型名称和凭据，会产生模型调用。案例来源默认是 `data/cases/development.jsonl`。
 
@@ -112,11 +117,11 @@ uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 
 ## API 配置边界
 
-程序读取 `ANTHROPIC_AUTH_TOKEN` 或 `ANTHROPIC_API_KEY`；地址来自 `ANTHROPIC_BASE_URL`；模型名称优先使用 `LACAZE_MODEL`，其次 `ANTHROPIC_MODEL`。
+程序读取 `ANTHROPIC_API_KEY`（或代理用的 `ANTHROPIC_AUTH_TOKEN`）；模型名称优先使用 `LACAZE_MODEL`，默认 `claude-opus-5-5`。不设 `ANTHROPIC_BASE_URL` 时直接连接 Anthropic 官方 API；只有走代理时才需要设置它。
 
-旧默认地址 `http://localhost:6655/anthropic` 指向旧电脑的本地代理，不是公共模型服务。旧记录中的模型名为 `claude-opus-4-8`；它是历史配置/记录，不能据此认定新服务商支持该标识。
+API key 需要在 Claude Console（platform.claude.com）单独充值后创建，Claude app 的套餐额度不是 API key。把 `.env.example` 复制为 `.env` 并填入即可。
 
-接入新的服务时，需同时确认 Anthropic 接口兼容性、服务地址、实际模型标识和 key。仅提供 OpenAI 兼容接口的 key 无法直接用于当前 provider。
+旧记录中的 `http://localhost:6655/anthropic` 和 `claude-opus-4-8` 来自旧电脑的公司代理，只是历史配置。
 
 ## 本机环境整理结果（2026-11-04）
 
@@ -133,13 +138,13 @@ uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 
 ## 本机验证结果
 
-- `lacaze validate-data`：10 例、6 个场景全部覆盖、6 款商品；配置哈希与旧 v0.1.2 汇总一致。
-- `pytest -q`：17 passed in 2.43s。
+- `lacaze validate-data`：10 例、6 个场景全部覆盖、6 款商品（v0.2.0，2026-11-07）。
+- `pytest -q`：52 passed（v0.2.0，2026-11-07）。
 - `ruff check src scripts tests`：All checks passed。
 - `uv run --locked --offline python`：确认使用项目 `.venv` 的 Python 3.13.13。
 - zsh 配置语法检查通过；登录/交互终端的 Python 和 pip 指向一致；激活 `.venv` 后新开嵌套 shell 仍优先使用项目解释器。
 
-当前没有应用可读取的 Anthropic key，项目没有 `.env`，旧模型代理未运行。没有调用真实模型，也没有启动持续运行的真实模型 API 服务；HTTP 行为通过测试中的模拟模型验证。
+截至 2026-11-07，项目还没有 `.env`，也就没有可用的 API key。v0.2 还没有用真实模型跑过。没有调用真实模型，也没有启动持续运行的真实模型 API 服务；HTTP 行为通过测试中的模拟模型验证。
 
 后续在项目目录中可直接运行：
 
@@ -151,7 +156,7 @@ uv run ruff check src scripts tests
 
 ## 离线测试的输入与输出
 
-`tests/conftest.py` 中的 `ScriptedModel` 通过 PydanticAI `FunctionModel` 模拟模型响应，不联网。输入使用真实的开发案例结构；输出是测试作者预设的结构化上下文、策略、工具调用和三条中文消息。
+`tests/conftest.py` 中的 `ScriptedModel` 通过 PydanticAI `FunctionModel` 模拟模型响应，不联网。输入使用真实的开发案例结构；输出是测试作者预设的计划和三条中文消息，可以设定为第一次或每次都出错，用来测重试和警告。
 
 例如，C02 的模拟生成结果为：
 
@@ -159,6 +164,6 @@ uv run ruff check src scripts tests
 2. 林女士，先接着您上次提到的需求聊聊。
 3. 林女士，您可以按自己的节奏慢慢看。
 
-这些不是原有真实模型生成结果，也不是理想答案。测试检查程序是否按约定处理这些响应，例如：引用校验、产品查询最多两次、只给写作阶段传选定证据、并发客户数据隔离、缺少业务日期返回 422、失败记录不伪造输出。
+这些不是原有真实模型生成结果，也不是理想答案。测试检查程序是否按约定处理这些响应，例如：Planner 看到内部层级而 Writer 看不到、Writer 每个角度只拿到引用的事实、计划和消息出错时重试、重试后仍有问题时带警告返回、并发客户数据隔离、缺少业务日期返回 422、失败记录不伪造输出。
 
-离线测试通过不能证明模型理解正确、提示词有效或话术质量达标。已有实际话术仍保存在 `artifacts/review-v0.1.2/`；按用户要求，本轮不开展话术质量评估或行业调研。
+离线测试通过不能证明模型理解正确、提示词有效或话术质量达标。v0.1.2 的实际话术和评估保存在 `artifacts/review-v0.1.2/` 与 `artifacts/eval-review-v0.1.2-rubric2/`。

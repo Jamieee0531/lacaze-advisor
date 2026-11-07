@@ -11,7 +11,7 @@ def create_model(settings: Settings) -> tuple[AnthropicModel, AsyncAnthropic]:
             "Set ANTHROPIC_AUTH_TOKEN or ANTHROPIC_API_KEY in your shell or local .env"
         )
     client = AsyncAnthropic(
-        base_url=settings.base_url.rstrip("/") + "/",
+        base_url=settings.base_url.rstrip("/") + "/" if settings.base_url else None,
         auth_token=settings.auth_token.get_secret_value() if settings.auth_token else None,
         api_key=settings.api_key.get_secret_value() if settings.api_key else None,
         timeout=settings.request_timeout_seconds,

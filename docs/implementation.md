@@ -1,4 +1,6 @@
-# Implementation record — 2026-11-04
+# Implementation record — 2026-11-04 (v0.1.x)
+
+> Historical record of the v0.1.x extraction → decision → generation chain. v0.2 replaced it with preparation → Planner → Writer; see `docs/project-map.zh-CN.md` and the README.
 
 User-authorized scope: build the agreed workflow using PydanticAI, typed English contracts, fictional LACAZE data, a small read-only product tool, and a ten-case batch runner. No database, multi-model fallback, elaborate evaluation platform, or frontend. Original research plans in the project root describe earlier discussion, not the active implementation.
 
