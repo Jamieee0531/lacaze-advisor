@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "lacaze-advisor"
 version = "0.2.3"
-description = "Private, fictional luxury client-advisor drafting workflow"
+description = "Drafts three WeChat messages for a luxury Client Advisor, grounded in client and product facts"
 requires-python = ">=3.13"
 dependencies = [
   "pydantic-ai-slim[anthropic]>=2.65,<3",

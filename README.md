@@ -1,65 +1,59 @@
 # LACAZE Advisor
 
-Private development project for the Artefact written challenge. LACAZE, all clients, products, services and events are fictional. The recruitment PDF and screenshots stay local.
+Drafts three WeChat messages for a luxury Client Advisor, grounded in what the store actually knows about the client and the product.
 
-The application takes a case and generates three Chinese WeChat drafts for a Client Advisor. It uses **PydanticAI 2.65**, **Pydantic 2**, **Python 3.13.13** and the Anthropic API (default model `claude-sonnet-5-5`). There is no database, vector retrieval, automated message sending or model fallback.
+Given a client, the conversation so far and a scenario, it returns three candidate messages in Chinese, each taking a different angle. The advisor picks one, edits it and sends it. Nothing is sent automatically.
 
-## Run locally
+> LACAZE is a fictional brand. All clients, products, services and events in this repository are invented.
 
-Run these commands from the `lacaze-advisor/` directory. A transfer copy contains dependency declarations, not installed packages; `uv sync --locked` recreates the environment on the destination computer.
+## Example
+
+Scenario: *Birthday and festive greetings*. The client registered recently and has talked to the advisor once. There is little to personalise, and the messages must not sell.
+
+| Angle | Message |
+|---|---|
+| 简短生日祝福 | 许小姐，生日快乐。愿您今天过得轻松愉快，新的一岁一切顺心。 |
+| 初见的记忆 | 许小姐，生日快乐。十月在澄园店见到您，到现在还有印象。今天是您的生日，想在这里送上一句祝福，愿您新的一岁顺心舒展。 |
+| 她随口说的喜欢 | 许小姐，生日快乐。还记得您那天逛店时随口说喜欢象牙白，那份轻松随意的眼光让我印象很深。愿您今天也过得自在愉快。 |
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Case input] --> B[Prepare<br/>code]
+    B --> C[Planner<br/>model]
+    C --> D[Writer<br/>model]
+    D --> E[Polish<br/>code + model]
+    E --> F[Three drafts]
+    B -. facts with IDs .-> C
+    C -. chosen fact IDs .-> D
+```
+
+1. **Prepare** (code, no model). A loading table decides, per scenario, which facts the case needs: products, services, policies, events, calendar, purchases. Every fact gets an ID. Client tier, eligibility and dates are computed, not asked of a model.
+2. **Planner** (one call). Reads the client, the history and the facts. Lists what the client asked, which facts apply, what to avoid, and three different angles. Code checks that every cited ID exists.
+3. **Writer** (one call). Writes one message per angle, seeing only the facts the plan chose. Code checks prices, dates, product scope, internal terms, salutation and length; a hard failure gets one rewrite with feedback.
+4. **Polish.** Code flags sentences that match known problem patterns (reassurance nobody asked for, defensive non-answers). Only those sentences are rewritten.
+
+It is a fixed workflow, not an autonomous agent: no tools, no database, no retrieval beyond the loading table.
+
+## Quick start
+
+Requires Python 3.13 and [uv](https://docs.astral.sh/uv/).
 
 ```sh
 uv sync --locked
+cp .env.example .env        # set ANTHROPIC_API_KEY
 uv run lacaze validate-data
-uv run lacaze generate --case-id C01
-uv run lacaze generate --input /absolute/path/to/new-case.json
-uv run python scripts/run_cases.py
+uv run lacaze generate --case-id C12
 ```
 
-Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY` (created in Claude Console, platform.claude.com) and optionally `LACAZE_MODEL`. Without `ANTHROPIC_BASE_URL` the official Anthropic API is used; set it, with `ANTHROPIC_AUTH_TOKEN`, only for a proxy. Credentials are not copied into source or result files.
+`LACAZE_MODEL` selects the model (default `claude-sonnet-5-5`). Set `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` only when going through a proxy.
 
-Run selected cases, or choose an artifact directory:
+### Your own case
 
 ```sh
-uv run lacaze batch --case-ids C02 C07 C10 --output-dir artifacts/my-run
+uv run lacaze generate --input new-case.json
 ```
-
-The default is sequential. Add `--concurrency 2` to run two independent cases at once; each still has its own run-local state.
-
-Output directories must be new, preventing accidental replacement of earlier experiments. The default is a timestamped folder under `artifacts/`. Each case writes its result immediately; errors are recorded separately and remaining cases continue. This runner measures execution, not semantic quality.
-
-## Structure
-
-```text
-src/lacaze/
-  domain/                    Contracts: input, case pack, plan, drafts, result; shared text checks
-  application/preparation.py Preparation node: loading table → per-case fact pack (no model call)
-  application/agents.py      Planner and Writer, with layered instructions
-  application/plan_checks.py Code checks on the plan
-  application/guardrail.py   Code checks on the drafts
-  application/workflow.py    Fixed order and the Planner / Writer inputs
-  application/batch.py       Batch execution and artifacts (sequential by default)
-  infrastructure/            Data loading, foundation lookups, settings, model client
-  interfaces/                CLI and thin HTTP entry point
-  evaluation/                Judge packets, code checks, summaries and reports
-data/
-  foundation/                Brand, scenario rules, products, services, policies, events,
-                             calendar, clients and itemized purchases (see its README)
-  context/loading.json       Scenario × data loading table
-  context/guardrail.json     Draft checks (length, internal terms)
-  prompts/                   Planner and Writer instructions; one invented style example per scenario
-  cases/development.jsonl    Ten development cases
-  evaluation/                Rubric, judge prompt, schema, phrase lists
-scripts/run_cases.py         Batch convenience entry point
-tests/                       Offline tests with a scripted model
-artifacts/                   Local run outputs, ignored by Git
-```
-
-The application runs from this source checkout. Set `LACAZE_DATA_DIR` when storing runtime data elsewhere. Original Markdown notes remain human discussion/source material, not runtime prompts.
-
-## Input contract
-
-All JSON field names are English. Chinese text is preserved in names, history and message content. The authoritative contract is `src/lacaze/domain/models.py`; HTTP OpenAPI also exposes the schemas.
 
 ```json
 {
@@ -72,91 +66,79 @@ All JSON field names are English. Chinese text is preserved in names, history an
 }
 ```
 
-A new client without store records is written inline instead, e.g. `{"name": "周敏", "salutation": "周女士"}`; the tool then treats purchases as unknown.
+- `scenario` is one of six: `Birthday and festive greetings`, `Product recommendation`, `Post-purchase care`, `Reactivation`, `Event invitation`, `Price objection`.
+- `case_date` is required. It is the business date of the case; the machine's date is never used.
+- A known client is given by `client_id` alone. Name, birthday, purchases, tier and spend come from `data/foundation/`.
+- A new client is written inline: `{"name": "周敏", "salutation": "周女士"}`. Purchases are then treated as unknown.
+- `product_information` holds `product_ids` and an optional `event_id`.
+- History is chronological, with unique `message_id` values, none after `case_date`.
 
-`scenario` is exactly one of the original PDF labels:
+The full contract is `src/lacaze/domain/models.py`.
 
-1. `Birthday and festive greetings`
-2. `Product recommendation`
-3. `Post-purchase care`
-4. `Reactivation`
-5. `Event invitation`
-6. `Price objection`
+### Batches
 
-`case_date` is required and is the simulated business date. The system never substitutes today's machine date. Actual API timestamps appear only in run metadata. History is chronological, with unique `message_id` values and no message after `case_date`.
-
-A known client is given by `client_id` alone. Name, salutation, birthday, cumulative spend, tier and purchases come from `data/foundation/`; spend and tier are computed from purchases up to `case_date`, never written by hand.
-
-`product_information` names what the case is about: `product_ids` and an optional `event_id`. `lacaze validate-data` fails on unknown IDs in our own cases; generation is lenient and passes an unknown ID to the Planner as a note, so a live input with a typo still runs.
-
-## Workflow and data ownership
-
-```text
-CaseInput
-   ↓
-Preparation (Python): loading table for this scenario → CasePack
-   client card (internal tier/spend), full history, facts with IDs, notes
-   ↓
-Planner (one call): situation, sub-type, avoid, three angles citing message IDs
-   and fact IDs, missing information
-   ↓ code checks: IDs exist, sub-type allowed, angles differ (one retry with feedback)
-Writer (one call): salutation, full history, the plan, only the facts each angle cites
-   ↓ code checks: prices/dates/times in facts, products in scope, no internal terms,
-     salutation, length (one retry with feedback)
-Three drafts + angle names for the CA + pack, plan and warnings
+```sh
+uv run lacaze batch --case-ids C02 C07 C10 --output-dir artifacts/my-run
+uv run lacaze batch --concurrency 2
 ```
 
-This is a fixed workflow, not an autonomous agent: routing is by the input scenario and no tools are called. Instructions come in three layers: brand rules (both stages; tone only for the Writer), scenario rules split into judgement (Planner) and wording (Writer), and the case payload.
+Output directories must be new. Each case writes `Cxx.json` (input, plan, drafts, warnings, token usage) as soon as it finishes; `outputs.csv` and `summary.json` are written at the end, with `configuration.json` recording the exact data and prompts used.
 
-Preparation picks rows and columns: products under discussion (case, event or mentioned in history) with only the fields this scenario needs; owned products appear as purchase facts; services and policies per scenario, allocation rules only when a restricted product is involved. It computes tier, eligibility for events, days since purchases, birthdays and festivals near the business date, and the last contact.
-
-History quotations are copied by code from the cited message IDs, so a model never retypes them. If a problem persists after the retry, unverifiable plan citations are dropped and drafts are returned with warnings; a person reviews every draft before sending. The provider SDK has automatic network retries disabled; no canned message is substituted.
-
-## Batch artifacts
-
-- `C01.json` … `C10.json`: exact input and complete successful result, or an error type.
-- `outputs.csv`: requested input/output columns plus case date and execution status.
-- `summary.json`: model, configuration hash, counts and completion time.
-- `configuration.json`: exact data, loading table, rules and prompt file contents used for that batch, so later edits do not erase the experimental setup.
-
-Successful results include the case pack, the plan, three drafts with the fact IDs they used, warnings, application version, configuration hash, timestamps and per-stage request/token counts. `outputs.csv` also has the resolved client card and the three angle names. There are no invented scores or ground-truth answers.
-
-## HTTP interface
+### HTTP
 
 ```sh
 uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000/docs` for the interactive schema and a new-input test. `GET /health` reports application readiness; it does not make a model request. `GET /scenarios` lists the six labels. `POST /generate` accepts a CaseInput and returns the same result as the CLI. Invalid inputs return 422; a failed generation returns 502 with an error type. The service is intended for local use.
+`POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema. Intended for local use.
 
-## Checks
+## Evaluation
+
+`lacaze evaluate` scores existing runs against a rubric; it never regenerates messages.
+
+| Level | Meaning |
+|---|---|
+| Not acceptable | Fabricates facts, crosses a brand red line, or contradicts what the client said |
+| Needs edit | Safe, but not yet personal, natural and on-brand, or not responding to the moment |
+| Good | Passes all six indicators |
+
+```sh
+uv run lacaze evaluate prepare --run artifacts/my-run --out artifacts/eval --judge-model claude-opus-5-5
+# one independent judge per packets/Cxx.md writes judgments/Cxx.json
+uv run lacaze evaluate collect --eval-dir artifacts/eval
+```
+
+Packets are blind: no app version, run name or code flags. Labels are computed by code from the judge's yes/no answers. The rubric, judge prompt and schema are in `data/evaluation/`; `collect` refuses judgments if any of them changed after `prepare`.
+
+On the 50 test cases in `data/cases/`, v0.2.3 produced 75 Good, 54 Needs edit and 21 Not acceptable messages out of 150, and at least one Good message in 43 of 50 cases.
+
+## Project layout
+
+```text
+src/lacaze/
+  domain/          Contracts: input, case pack, plan, drafts, result
+  application/     Preparation, Planner and Writer, code checks, polish, workflow, batch
+  infrastructure/  Data loading, settings, model client
+  interfaces/      CLI and HTTP
+  evaluation/      Judge packets, code checks, labels, reports
+data/
+  foundation/      Brand, products, services, policies, events, calendar, clients, purchases
+  context/         Loading table, draft checks, polish patterns
+  prompts/         Planner, Writer and polish instructions
+  cases/           Development (10) and test (40) cases
+  evaluation/      Rubric, judge prompt, schema, phrase lists
+tests/             Offline tests with a scripted model
+```
+
+`LACAZE_DATA_DIR` points the app at data stored elsewhere.
+
+## Development
 
 ```sh
 uv run pytest -q
 uv run ruff check src scripts tests
 ```
 
-Offline tests use PydanticAI's FunctionModel to exercise the real workflow, retries and checks. They cover the preparation node, layered instructions, what each stage sees, plan and draft checks, warnings after a failed retry, request isolation, HTTP validation and batch files. They do not test the real model's language quality.
+The tests drive the real workflow with PydanticAI's `FunctionModel`: preparation, what each stage sees, plan and draft checks, retries, polish, HTTP validation and batch files. They do not judge the model's language quality; that is what `lacaze evaluate` is for.
 
-## Evaluation
-
-Evaluates existing run artifacts; it never re-generates messages. Rubric, judge prompt, judgment schema and code-check settings live in `data/evaluation/`. Each message gets a label computed by code from the judge's yes/no answers: Good, Needs edit or Not acceptable; each case also gets a distinct-angles verdict.
-
-```sh
-uv run lacaze evaluate prepare --run artifacts/review-v0.1.2 --out artifacts/eval-review-v0.1.2 --judge-model claude-opus-5-5
-# one independent judge per packets/Cxx.md writes judgments/Cxx.json (version 1: Claude Code subagents)
-uv run lacaze evaluate collect --eval-dir artifacts/eval-review-v0.1.2
-uv run lacaze evaluate report --eval-dir artifacts/eval-review-v0.1.2 --compare artifacts/eval-development-v0.1.1
-uv run lacaze evaluate calibration-template --eval-dir artifacts/eval-review-v0.1.2
-uv run lacaze evaluate agreement --eval-dir artifacts/eval-review-v0.1.2 --human artifacts/eval-review-v0.1.2/calibration/human_labels.csv
-```
-
-Packets are blind: no app version, run name or code-check flags. They contain the rubric, brand and scenario policies, the case input, the client card and the facts the generator actually saw (including purchases). All versions are judged against the same current policies. Results record the judge model plus rubric, judge-prompt, schema, checks and policy hashes; `collect` refuses judgments if any of these files changed after `prepare`.
-
-Code checks (banned phrases, exclamation marks, prices/dates/times not in facts, out-of-scope product names, salutation, length) are shown beside judge results as flags and never decide a label. The calibration template and its review page contain no judge output, so human labels stay blind. An API judge executor can later implement `JudgeExecutor` in `src/lacaze/evaluation/executors.py` without changing rubric, packets or labels.
-
-## Current development results
-
-Version **0.1.2** has actual results for all ten development cases in `artifacts/review-v0.1.2/`, evaluated with rubric v2 in `artifacts/eval-review-v0.1.2-rubric2/` (Good 15 / Needs edit 10 / Not acceptable 5; distinct angles 0/10).
-
-Version **0.2.0** (preparation node, Planner + Writer, guardrail) passes 52 offline tests and lint. It has not been run against a real model yet; the next step is to regenerate the ten cases once an API key is available and evaluate them with the same rubric.
+Built with PydanticAI, Pydantic 2 and the Anthropic API.

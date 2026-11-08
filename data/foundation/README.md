@@ -1,46 +1,46 @@
-# LACAZE 数据基建
+# LACAZE foundation data
 
-LACAZE 的全部业务数据：品牌设定与规则，以及门店系统中的客户和消费记录。所有人物、商品、价格、服务和活动均为虚构。
+All business data for LACAZE: the brand and its rules, and the clients and purchases held in the store system. Every person, product, price, service and event is fictional.
 
-## 文件
+## Files
 
-### brand/ 品牌
+### brand/
 
-| 文件 | 内容 | 主键 |
+| File | Content | Key |
 |---|---|---|
-| `brand.json` | 品牌身份、调性、顾问话术规则 | — |
-| `scenarios.json` | 六个场景各自的目标和规则 | `scenario` |
-| `products.json` | 六款商品：定位、价格、资格、配货、尺寸、重量、皮料、开合、内部结构、背法、颜色、能装什么、工艺、保养 | `product_id` |
-| `services.json` | 门店服务：内容、适用条件、办理方式 | `service_id` |
-| `policies.json` | 定价、渠道、配货、客户层级规则 | — |
-| `stores.json` | 门店名称与城市 | `store_id` |
-| `events.json` | 门店活动：时间、地点、参加范围、内容、可约时段、不包含的权益 | `event_id` |
-| `calendar.json` | 2026–2027 年节日，农历节日已换算成公历 | `date` + `name` |
+| `brand.json` | Brand identity, tone, advisor speaking rules | n/a |
+| `scenarios.json` | Goal and rules of each of the six scenarios | `scenario` |
+| `products.json` | Six products: positioning, price, eligibility, allocation, size, weight, leather, closure, interior, carry options, colours, what fits, craft, care | `product_id` |
+| `services.json` | Store services: content, conditions, how to arrange | `service_id` |
+| `policies.json` | Pricing, channel, allocation and tier rules | n/a |
+| `stores.json` | Store name and city | `store_id` |
+| `events.json` | Store events: time, place, audience, content, bookable slots, what is not included | `event_id` |
+| `calendar.json` | Festivals for 2026–2027, lunar dates converted to the Gregorian calendar | `date` + `name` |
 
-### clients/ 客户
+### clients/
 
-| 文件 | 内容 | 主键 |
+| File | Content | Key |
 |---|---|---|
-| `clients.json` | 客户身份：称呼、性别、年龄、职业、生日、所属门店、建档日期 | `client_id` |
-| `purchases.json` | 逐笔消费记录：商品、颜色、日期、成交价、门店 | `purchase_id` |
+| `clients.json` | Identity: salutation, gender, age, occupation, birthday, home store, registration date | `client_id` |
+| `purchases.json` | One row per purchase: product, colour, date, price paid, store | `purchase_id` |
 
-关联：`purchases` → `client_id`、`product_id`、`store`；`events` → `store`、`featured_products`；`clients` → `home_store`。程序加载时会检查这些 ID 都存在。
+References: `purchases` → `client_id`, `product_id`, `store`; `events` → `store`, `featured_products`; `clients` → `home_store`. `lacaze validate-data` checks that every ID exists.
 
-测试用例（`data/cases/`）只写客户 ID、商品 ID 和活动 ID，具体内容从这里读取。
+Test cases (`data/cases/`) carry only client, product and event IDs; the content is read from here.
 
-## 约定
+## Conventions
 
-1. **一个事实只存一处。** 累计消费和客户层级由 `purchases.json` 计算，规则见 `policies.json`，不手工填写。
-2. **null 表示不知道，空列表表示确认没有。** 例如 `birthday: null` 表示没有记录生日；客户在 `purchases.json` 中没有记录，表示确认尚无购买。
-3. **ID 用小写英文**，例如 `cl004`、`veronique`、`sv_annual_care`；中文只出现在名称和描述里。
-4. **门店用 ID 引用**，名称见 `stores.json`；目前只有 `shanghai_chengyuan`（LACAZE 上海澄园店）。
-5. **偏好、需求、沟通习惯不在这里**，由模型从对话历史中理解。
+1. **One fact, one place.** Cumulative spend and client tier are computed from `purchases.json` using the rules in `policies.json`, never entered by hand.
+2. **`null` means unknown, an empty list means confirmed none.** `birthday: null` means no birthday on record; a client with no rows in `purchases.json` has confirmed no purchases.
+3. **IDs are lowercase English** (`cl004`, `veronique`, `sv_annual_care`); Chinese appears only in names and descriptions.
+4. **Stores are referenced by ID**; names are in `stores.json`. Currently only `shanghai_chengyuan` (LACAZE Shanghai Chengyuan).
+5. **Preferences, needs and communication habits are not stored here.** The model reads them from the conversation history.
 
-## 刻意不提供的信息
+## Deliberately withheld
 
-品牌不会把以下信息提供给顾问。话术中出现具体内容，即为编造：
+The brand does not give advisors the following. Any specific claim about them in a message counts as fabrication:
 
-- 库存数量、到货时间
-- 保值、升值、转售价格
-- 折扣、赠品、额外权益
-- 其他渠道的价格与真伪判断
+- Stock levels and arrival dates
+- Resale or investment value
+- Discounts, gifts and extra benefits
+- Prices or authenticity at other channels

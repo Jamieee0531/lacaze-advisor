@@ -11,6 +11,8 @@ artifacts/
 .local/
 dist/
 *.egg-info/
-# Confidential recruitment source material and screenshots stay local.
+# Local-only material
 *.pdf
 截屏/
+docs/
+deliverables/
