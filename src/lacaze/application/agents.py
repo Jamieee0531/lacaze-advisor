@@ -11,6 +11,7 @@ from pydantic_ai.models import Model
 from lacaze.application.guardrail import draft_problems
 from lacaze.application.plan_checks import plan_problems, sanitize_plan
 from lacaze.application.polish import rewrite_problems
+from lacaze.application.progress import ProgressObserver, report
 from lacaze.domain.pack import CasePack
 from lacaze.domain.plan import Drafts, Flag, Plan, Rewrites
 from lacaze.infrastructure.data import RuntimeData
@@ -25,6 +26,7 @@ class RunDependencies:
     plan: Plan | None = None
     flags: list[Flag] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    observer: ProgressObserver | None = None
 
 
 def _dump(value) -> str:
@@ -84,32 +86,41 @@ def create_agents(model: Model, data: RuntimeData) -> tuple[Agent, Agent, Agent]
     )
 
     @planner.output_validator
-    def validate_plan(ctx: RunContext[RunDependencies], plan: Plan) -> Plan:
+    async def validate_plan(ctx: RunContext[RunDependencies], plan: Plan) -> Plan:
         problems = plan_problems(plan, ctx.deps.pack, ctx.deps.data)
         if not problems:
             return plan
         if ctx.retry < ctx.max_retries:
+            await report(
+                ctx.deps.observer, {"type": "stage_retry", "stage": "planner", "problems": problems}
+            )
             raise ModelRetry("计划有以下问题，请修正后重新输出：\n- " + "\n- ".join(problems))
         # Last attempt: keep going with what can be verified rather than failing the case.
         ctx.deps.warnings += [f"计划：{p}" for p in problems]
         return sanitize_plan(plan, ctx.deps.pack)
 
     @writer.output_validator
-    def validate_drafts(ctx: RunContext[RunDependencies], drafts: Drafts) -> Drafts:
+    async def validate_drafts(ctx: RunContext[RunDependencies], drafts: Drafts) -> Drafts:
         problems = draft_problems(drafts, ctx.deps.pack, ctx.deps.plan, ctx.deps.data)
         if problems and ctx.retry < ctx.max_retries:
+            await report(
+                ctx.deps.observer, {"type": "stage_retry", "stage": "writer", "problems": problems}
+            )
             raise ModelRetry("消息有以下问题，请修正后重新输出三条：\n- " + "\n- ".join(problems))
         ctx.deps.warnings += [f"消息：{p}" for p in problems]
         return drafts
 
     @polisher.output_validator
-    def validate_rewrites(ctx: RunContext[RunDependencies], rewrites: Rewrites) -> Rewrites:
+    async def validate_rewrites(ctx: RunContext[RunDependencies], rewrites: Rewrites) -> Rewrites:
         deps = ctx.deps
         checked = [
             (r, rewrite_problems(r, deps.flags, deps.pack, deps.data)) for r in rewrites.rewrites
         ]
         problems = [p for _, found in checked for p in found]
         if problems and ctx.retry < ctx.max_retries:
+            await report(
+                ctx.deps.observer, {"type": "stage_retry", "stage": "polish", "problems": problems}
+            )
             raise ModelRetry("改写有以下问题，请修正后重新输出：\n- " + "\n- ".join(problems))
         # Last attempt: keep the original sentence wherever the rewrite fails a check.
         deps.warnings += [f"修整：{p}，已保留原句" for p in problems]

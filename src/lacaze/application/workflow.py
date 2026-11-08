@@ -12,6 +12,7 @@ from lacaze.application.fact_text import WEEKDAYS
 from lacaze.application.guardrail import soft_warnings
 from lacaze.application.polish import apply_rewrites, find_flags, polish_payload
 from lacaze.application.preparation import prepare
+from lacaze.application.progress import ProgressObserver, report
 from lacaze.domain.models import CandidateMessages, CaseInput, StageUsage
 from lacaze.domain.pack import CasePack
 from lacaze.domain.plan import Draft, Drafts, Edit, Plan
@@ -30,10 +31,20 @@ class AdvisorWorkflow:
         self.data = data
         self.planner, self.writer, self.polisher = create_agents(model, data)
 
-    async def generate(self, case: CaseInput) -> GenerationResult:
+    async def generate(
+        self, case: CaseInput, *, observer: ProgressObserver | None = None
+    ) -> GenerationResult:
         started_at = datetime.now(UTC)
+        await report(
+            observer,
+            {"type": "stage_started", "stage": "prepare", "input": case.model_dump(mode="json")},
+        )
         pack = prepare(case, self.data)
-        run = _Run(RunDependencies(pack=pack, data=self.data))
+        await report(
+            observer,
+            {"type": "stage_completed", "stage": "prepare", "output": pack.model_dump(mode="json")},
+        )
+        run = _Run(RunDependencies(pack=pack, data=self.data, observer=observer))
         run.deps.plan = await run.stage(self.planner, "planner", planner_payload(pack))
         rules = self.data.scenarios[pack.scenario].writer_rules
         written = await run.stage(self.writer, "writer", writer_payload(pack, run.deps.plan, rules))
@@ -81,10 +92,27 @@ class AdvisorWorkflow:
         """Only drafts with a flagged sentence cost a model call."""
         run.deps.flags = find_flags(drafts, self.data.polish)
         if not run.deps.flags:
+            await report(
+                run.deps.observer,
+                {"type": "stage_skipped", "stage": "polish", "reason": "未命中修整规则"},
+            )
             return drafts, []
         payload = polish_payload(run.deps.pack, drafts, run.deps.flags, self.data)
         rewrites = await run.stage(self.polisher, "polish", payload)
-        return apply_rewrites(drafts, rewrites.rewrites, run.deps.flags)
+        polished, edits = apply_rewrites(drafts, rewrites.rewrites, run.deps.flags)
+        await report(
+            run.deps.observer,
+            {
+                "type": "stage_completed",
+                "stage": "polish",
+                "output": {
+                    "drafts": [d.model_dump(mode="json") for d in polished],
+                    "edits": [e.model_dump(mode="json") for e in edits],
+                },
+                "usage": run.usage[-1].model_dump(mode="json"),
+            },
+        )
+        return polished, edits
 
 
 class _Run:
@@ -97,6 +125,9 @@ class _Run:
 
     async def stage(self, agent, stage: str, payload: dict):
         start = perf_counter()
+        await report(
+            self.deps.observer, {"type": "stage_started", "stage": stage, "input": payload}
+        )
         result = await agent.run(
             json.dumps(payload, ensure_ascii=False, indent=1),
             deps=self.deps,
@@ -114,6 +145,17 @@ class _Run:
                 output_tokens=counters.output_tokens,
             )
         )
+        # Polish completion includes the spliced drafts and is emitted by _polish.
+        if stage != "polish":
+            await report(
+                self.deps.observer,
+                {
+                    "type": "stage_completed",
+                    "stage": stage,
+                    "output": result.output.model_dump(mode="json"),
+                    "usage": self.usage[-1].model_dump(mode="json"),
+                },
+            )
         return result.output
 
 
