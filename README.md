@@ -8,17 +8,17 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 ## Example
 
-Scenario: *Price objection*. A client who has been considering the Margaux (CNY 68,000) writes:
+Scenario: *Price objection*. A recent graduate, interested in the Colette (CNY 35,000) as her first LACAZE bag, writes:
 
-> 我还是想考虑 Margaux。如果这次就买，能不能给我打个九折？
+> 你们有新客优惠或者学生价吗？我刚毕业没多久哈哈。
 
 The brand does not discount, and the advisor must say so without sounding scripted or pushing. Three candidates, each with a different angle:
 
 | Angle | Message |
 |---|---|
-| 直接回应 | 吴女士，谢谢您还惦记着 Margaux。九折这一点我没办法答应：LACAZE 全国官方门店都是统一定价，不打折、不议价，也没有会员折扣，Margaux 是 6.8 万元。 |
-| 扣子与工艺 | 吴女士，九折这一点我得如实告诉您：我们不打折、不议价，Margaux 全国统一 6.8 万元。您之前说喜欢它的扣子，那是马镫扣，源自品牌马具工坊的传统；包身的马鞍针脚也是全手工缝制。 |
-| 购买后服务 | 吴女士，九折这边没办法做，我们全国官方门店统一定价，不打折、不议价。另外告诉您一下：在官方门店购买的手袋，每年可以送店做一次免费基础护理，内侧皮标也可以免费烫印最多三个字母。如果想再看看实物、试背，提前约个时间，我一对一接待您。 |
+| 直答政策 | 许小姐，直接回答您：针对新客或学生的特别价格，我们都没有。LACAZE 全国官方门店统一定价，不打折、不议价，也没有会员折扣，Colette 是 35,000 元。有什么想了解的随时问我。 |
+| 先接预算 | 许小姐，刚毕业，对价格多掂量一下很正常。新客和学生的专属价格我们确实没有，全国门店都是统一定价，不打折。您说平时出门东西不多，Colette 能放下手机（6.7 英寸以内）、卡包、钥匙和口红，您可以对照自己的日常看看合不合适。 |
+| 讲清所含 | 许小姐，新客和学生的专属价格都没有，我们不打折也不议价。不过在官方门店购买的手袋，每年可以免费做一次基础护理，内侧皮标也可以免费烫印最多三个首字母。Colette 用的是小羊皮，链条是手工逐节打磨的。您想再考虑也完全可以，若想先看看实物、试背，到时跟我约时间就好。 |
 
 ## How it works
 
