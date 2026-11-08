@@ -163,6 +163,7 @@ def writer_payload(pack: CasePack, plan: Plan, wording_rules: list[str]) -> dict
         "conversation_history": _history(pack),
         "wording_rules": wording_rules,
         "situation": plan.situation,
+        "client_asks": plan.client_asks,
         "avoid": plan.avoid,
         "missing": plan.missing,
         "angles": angles,

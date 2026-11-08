@@ -21,6 +21,10 @@ class Angle(Contract):
 
 class Plan(Contract):
     situation: str = Field(min_length=1, description="客户现在的状态，一两句话")
+    client_asks: list[str] = Field(
+        default_factory=list,
+        description="客户这次明确问到或要求的点，逐条列出；没有明确要求时为空",
+    )
     sub_type: str = Field(description="本场景的子类型，只能从给定列表中选")
     avoid: list[str] = Field(description="这次不能做的事")
     angles: Annotated[list[Angle], Field(min_length=3, max_length=3)]

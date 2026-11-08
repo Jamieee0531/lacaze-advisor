@@ -17,6 +17,8 @@ async def test_planner_sees_pack_and_writer_sees_only_cited_facts(data, cases):
     write_input = stage_payloads(scripted, "writer")[0]
     assert "client" not in write_input and "tier" not in str(write_input)
     assert write_input["conversation_history"] == plan_input["conversation_history"]
+    # What the client asked reaches the Writer as data, so every draft can answer it.
+    assert write_input["client_asks"] == result.plan.client_asks == ["接着她最近说的话回应"]
     for angle, planned in zip(write_input["angles"], result.plan.angles, strict=True):
         assert [f["fact_id"] for f in angle["facts"]] == planned.fact_ids
         assert [q["message_id"] for q in angle["quotes"]] == planned.message_ids

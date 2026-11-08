@@ -69,6 +69,7 @@ class ScriptedModel:
             angles[0]["fact_ids"] = ["made_up_fact"]
         return {
             "situation": "客户在等顾问回复",
+            "client_asks": ["接着她最近说的话回应"],
             "sub_type": sub_type or self.sub_type_for(payload["scenario"]),
             "avoid": ["不催促"],
             "angles": angles,
