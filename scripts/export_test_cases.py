@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import re
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -21,15 +23,18 @@ from openpyxl.styles import Alignment, Font, PatternFill
 
 COLUMNS = [
     ("Case ID", 9),
-    ("Scenario", 18),
-    ("Client information", 34),
+    ("Scenario", 30),
+    ("Client information", 40),
     ("Conversation history", 60),
-    ("Product information", 50),
+    ("Product information", 64),
     ("Output 1", 42),
     ("Output 2", 42),
     ("Output 3", 42),
 ]
 ROLES = {"client": "客户", "advisor": "顾问"}
+LINE_POINTS = 15
+MAX_ROW_POINTS = 409  # Excel's limit
+PURCHASE = re.compile(r"购买记录：(\d+)年(\d+)月(\d+)日购入 (.+?)，距今 \d+ 天")
 
 
 def client_information(pack: dict) -> str:
@@ -45,8 +50,19 @@ def client_information(pack: dict) -> str:
     lines = [f"{k}：{v}" for k, v in rows if v]
     if not c["purchases_known"]:
         lines.append("新客户，无门店购买记录")
-    lines += [f["text"] for f in pack["facts"] if f["kind"] == "purchase"]
+    purchases = [purchase(f["text"]) for f in pack["facts"] if f["kind"] == "purchase"]
+    if purchases:
+        lines.append("购买记录：" + "；".join(purchases))
     return "\n".join(lines)
+
+
+def purchase(text: str) -> str:
+    """'购买记录：2024年12月14日购入 Margaux 翻盖包（黑色），距今 692 天' -> '2024-12-14 Margaux 翻盖包（黑色）'"""
+    match = PURCHASE.fullmatch(text)
+    if not match:
+        return text
+    year, month, day, item = match.groups()
+    return f"{year}-{int(month):02d}-{int(day):02d} {item}"
 
 
 def conversation_history(pack: dict) -> str:
@@ -61,7 +77,20 @@ def product_information(pack: dict) -> str:
     facts = [f for f in pack["facts"] if f["kind"] in ("product", "event")]
     if not facts:
         return "不适用"
-    return "\n".join(f["text"] + ("（内部，不对客户说）" if f["internal"] else "") for f in facts)
+    groups: dict[str, list[dict]] = {}
+    for fact in facts:
+        groups.setdefault(fact["fact_id"].split(".")[0], []).append(fact)
+    return "\n".join(product_paragraph(group) for group in groups.values())
+
+
+def product_paragraph(facts: list[dict]) -> str:
+    """One product or event per paragraph; later facts drop the repeated product name."""
+    name = facts[0]["text"].split(" ")[0] + " "
+    parts = []
+    for i, fact in enumerate(facts):
+        text = (fact["text"] if i == 0 else fact["text"].removeprefix(name)).rstrip("。")
+        parts.append(text + ("（内部）" if fact["internal"] and "内部" not in text else ""))
+    return "；".join(parts)
 
 
 def row(result: dict) -> list[str]:
@@ -74,6 +103,20 @@ def row(result: dict) -> list[str]:
         product_information(pack),
         *result["candidates"]["messages"],
     ]
+
+
+def row_height(cells) -> float:
+    """Tall enough to show the longest cell without opening it."""
+    lines = max(
+        sum(math.ceil(max(display_width(part), 1) / width) for part in str(cell.value).split("\n"))
+        for cell, (_, width) in zip(cells, COLUMNS, strict=True)
+    )
+    return min(lines * LINE_POINTS, MAX_ROW_POINTS)
+
+
+def display_width(text: str) -> float:
+    """Excel column width units: a Chinese character takes about two, a Latin one about one."""
+    return sum(2 if ord(ch) >= 0x2E80 else 1.1 for ch in text)
 
 
 def load(run_dirs: list[Path]) -> list[dict]:
@@ -102,20 +145,10 @@ def write(results: list[dict], out: Path) -> None:
     for line in sheet.iter_rows():
         for cell in line:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+    for r in range(2, sheet.max_row + 1):
+        sheet.row_dimensions[r].height = row_height(sheet[r])
     sheet.freeze_panes = "B2"
     sheet.auto_filter.ref = sheet.dimensions
-
-    about = book.create_sheet("About")
-    first = results[0]
-    for line in [
-        ("Tool version", first["app_version"]),
-        ("Generation model", first["model"]),
-        ("Cases", f"{len(results)}: C01–C10 development set, C11–C50 held-out test set"),
-        ("Brand", "LACAZE is fictional; all clients, products and events are invented."),
-        ("Inputs", "As the tool saw them after preparation; purchases come from store records."),
-    ]:
-        about.append(line)
-    about.column_dimensions["A"].width, about.column_dimensions["B"].width = 18, 90
 
     out.parent.mkdir(parents=True, exist_ok=True)
     book.save(out)
