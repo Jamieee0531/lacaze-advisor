@@ -11,7 +11,8 @@ def plan_with(fact_ids):
         situation="客户在比较",
         sub_type="比较候选",
         avoid=[],
-        angles=[Angle(name=f"角度{i}", fact_ids=fact_ids, **angle) for i in range(1, 4)],
+        fact_ids=fact_ids,
+        angles=[Angle(name=f"角度{i}", **angle) for i in range(1, 4)],
         missing=[],
     )
 
@@ -85,7 +86,7 @@ def test_plan_citing_too_many_facts_is_a_problem(data, cases):
     from lacaze.application.plan_checks import plan_problems
 
     pack = prepare(cases[1], data)
-    many = [f.fact_id for f in pack.facts][: data.guardrail.max_facts_per_angle + 1]
+    many = [f.fact_id for f in pack.facts if not f.internal][: data.guardrail.max_plan_facts + 1]
     plan = plan_with(many)
     plan = plan.model_copy(
         update={
@@ -96,7 +97,7 @@ def test_plan_citing_too_many_facts_is_a_problem(data, cases):
         }
     )
     problems = plan_problems(plan, pack, data)
-    assert len([p for p in problems if "最多" in p]) == 3
+    assert len([p for p in problems if "最多" in p]) == 1
 
 
 def test_angle_must_rest_on_this_clients_words_or_purchases(data, cases):
@@ -105,11 +106,12 @@ def test_angle_must_rest_on_this_clients_words_or_purchases(data, cases):
     pack = prepare(cases[1], data)
     plan = plan_with(["sv_private_viewing"])
     generic = plan.angles[0].model_copy(update={"message_ids": []})
-    owned = plan.angles[1].model_copy(update={"message_ids": [], "fact_ids": ["p0006"]})
-    plan = plan.model_copy(update={"angles": [generic, owned, plan.angles[2]]})
+    plan = plan.model_copy(update={"angles": [generic, *plan.angles[1:]]})
     problems = plan_problems(plan, pack, data)
     assert any(p.startswith("角度 1 没有落在这位客户身上") for p in problems)
-    assert not any(p.startswith("角度 2 没有落在") for p in problems)
+    # Her purchase among the shared facts grounds every angle.
+    owned = plan.model_copy(update={"fact_ids": ["sv_private_viewing", "p0006"]})
+    assert not any("没有落在" in p for p in plan_problems(owned, pack, data))
 
 
 def test_internal_fact_in_an_angle_is_a_problem(data, cases):
@@ -130,3 +132,24 @@ def test_service_is_split_into_what_and_how(data, cases):
     facts = prepare(cases[3], data).facts_by_id()
     assert "约 7 天" not in facts["sv_annual_care"].text
     assert "约 7 天" in facts["sv_annual_care.how"].text
+
+
+def test_any_draft_may_use_any_planned_fact(data, cases):
+    """The three drafts are alternatives for one request, so planned facts are shared."""
+    pack = prepare(cases[1], data)
+    plan = plan_with(["odette.interior", "margaux.interior"])
+    texts = ["林女士，两款的分隔我整理好了。", "林女士，先说 Margaux。", "林女士，再说 Odette。"]
+    shared = Drafts(
+        drafts=[
+            Draft(angle=i, text=t, fact_ids=["odette.interior", "margaux.interior"])
+            for i, t in enumerate(texts, 1)
+        ]
+    )
+    assert not [p for p in draft_problems(shared, pack, plan, data) if "计划之外" in p]
+    outside = shared.model_copy(
+        update={
+            "drafts": [shared.drafts[0].model_copy(update={"fact_ids": ["sable.weight_g"]})]
+            + shared.drafts[1:]
+        }
+    )
+    assert any("计划之外" in p for p in draft_problems(outside, pack, plan, data))

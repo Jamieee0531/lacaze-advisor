@@ -142,7 +142,7 @@ def planner_payload(pack: CasePack) -> dict:
 
 
 def writer_payload(pack: CasePack, plan: Plan, wording_rules: list[str]) -> dict:
-    """The Writer sees the whole history but only the facts each angle cites."""
+    """The Writer sees the whole history and one set of planned facts shared by all angles."""
     messages = {m.message_id: m for m in pack.history}
     facts = pack.facts_by_id()
     angles = [
@@ -152,7 +152,6 @@ def writer_payload(pack: CasePack, plan: Plan, wording_rules: list[str]) -> dict
             "point": a.point,
             "purpose": a.purpose,
             "quotes": [messages[m].model_dump(mode="json") for m in a.message_ids],
-            "facts": [{"fact_id": f, "text": facts[f].text} for f in a.fact_ids],
             "next_step": a.next_step,
         }
         for i, a in enumerate(plan.angles, 1)
@@ -166,5 +165,6 @@ def writer_payload(pack: CasePack, plan: Plan, wording_rules: list[str]) -> dict
         "client_asks": plan.client_asks,
         "avoid": plan.avoid,
         "missing": plan.missing,
+        "facts": [{"fact_id": f, "text": facts[f].text} for f in plan.fact_ids],
         "angles": angles,
     }

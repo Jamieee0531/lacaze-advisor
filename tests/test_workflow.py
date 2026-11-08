@@ -19,8 +19,10 @@ async def test_planner_sees_pack_and_writer_sees_only_cited_facts(data, cases):
     assert write_input["conversation_history"] == plan_input["conversation_history"]
     # What the client asked reaches the Writer as data, so every draft can answer it.
     assert write_input["client_asks"] == result.plan.client_asks == ["接着她最近说的话回应"]
+    # One set of planned facts, shared by all three angles.
+    assert [f["fact_id"] for f in write_input["facts"]] == result.plan.fact_ids
     for angle, planned in zip(write_input["angles"], result.plan.angles, strict=True):
-        assert [f["fact_id"] for f in angle["facts"]] == planned.fact_ids
+        assert "facts" not in angle
         assert [q["message_id"] for q in angle["quotes"]] == planned.message_ids
         # Quotes are copied by code from the history, never retyped by a model.
         assert all(q["text"] for q in angle["quotes"])
@@ -68,18 +70,18 @@ async def test_plan_with_unknown_fact_is_retried_with_feedback(data, cases):
     scripted = ScriptedModel(plan_fault="unknown_fact")
     result = await AdvisorWorkflow(scripted.model, data).generate(cases[1])
     assert result.usage[0].requests == 2
-    assert "made_up_fact" not in result.plan.angles[0].fact_ids
+    assert "made_up_fact" not in result.plan.fact_ids
     assert not result.warnings
 
 
 async def test_persistent_plan_problem_is_dropped_and_reported(data, cases):
     scripted = ScriptedModel(plan_fault="unknown_fact", persistent=True)
     result = await AdvisorWorkflow(scripted.model, data).generate(cases[1])
-    assert "made_up_fact" not in result.plan.angles[0].fact_ids
+    assert "made_up_fact" not in result.plan.fact_ids
     assert any("made_up_fact" in w for w in result.warnings)
 
 
-async def test_draft_using_another_angles_fact_is_retried(data, cases):
+async def test_draft_using_a_fact_outside_the_plan_is_retried(data, cases):
     scripted = ScriptedModel(draft_fault="foreign_fact")
     result = await AdvisorWorkflow(scripted.model, data).generate(cases[1])
     assert result.usage[1].requests == 2 and not result.warnings

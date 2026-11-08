@@ -49,8 +49,8 @@ def _hard(draft: Draft, pack: CasePack, plan: Plan, data: RuntimeData) -> list[s
     sources = [m.text for m in pack.history] + [f.text for f in pack.facts]
     joined = "\n".join(sources)
     problems = []
-    if extra := sorted(set(draft.fact_ids) - set(plan.angles[draft.angle - 1].fact_ids)):
-        problems.append(f"用了不属于它那个角度的事实 {extra}")
+    if extra := sorted(set(draft.fact_ids) - set(plan.fact_ids)):
+        problems.append(f"用了计划之外的事实 {extra}")
     if prices := sorted(extract_prices(text) - extract_prices(joined)):
         problems.append(f"出现了事实中没有的价格 {prices}，请删除或改用事实中的价格")
     allowed_dates = extract_dates(joined) | {(pack.case_date.month, pack.case_date.day)}

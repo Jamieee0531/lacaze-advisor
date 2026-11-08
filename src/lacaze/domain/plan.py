@@ -15,7 +15,6 @@ class Angle(Contract):
     point: str = Field(min_length=1, description="这条消息要让客户记住的一个核心意思，一句平实的话")
     purpose: str = Field(min_length=1, description="这条消息要达成什么、讲到哪里为止；不写具体措辞")
     message_ids: list[str] = Field(description="依据的对话编号，例如 m009")
-    fact_ids: list[str] = Field(description="支撑要点、可以告诉客户的事实 ID；不需要时为空")
     next_step: str | None = Field(description="可选的下一步；不需要时为 null")
 
 
@@ -24,6 +23,9 @@ class Plan(Contract):
     client_asks: list[str] = Field(
         default_factory=list,
         description="客户这次明确问到或要求的点，逐条列出；没有明确要求时为空",
+    )
+    fact_ids: list[str] = Field(
+        description="三个角度共用的事实 ID：回答 client_asks 和支撑各角度所需的事实"
     )
     sub_type: str = Field(description="本场景的子类型，只能从给定列表中选")
     avoid: list[str] = Field(description="这次不能做的事")

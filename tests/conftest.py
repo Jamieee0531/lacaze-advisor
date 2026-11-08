@@ -60,16 +60,17 @@ class ScriptedModel:
                 "point": "接着她最近说的话回应",
                 "purpose": "回应客户最近的话",
                 "message_ids": cited[i],
-                "fact_ids": facts[i : i + 1],
                 "next_step": None,
             }
             for i, name in enumerate(["回应近况", "接着上次", "留出余地"])
         ]
+        fact_ids = facts[:3]
         if fault_now and self.plan_fault == "unknown_fact":
-            angles[0]["fact_ids"] = ["made_up_fact"]
+            fact_ids = [*fact_ids, "made_up_fact"]
         return {
             "situation": "客户在等顾问回复",
             "client_asks": ["接着她最近说的话回应"],
+            "fact_ids": fact_ids,
             "sub_type": sub_type or self.sub_type_for(payload["scenario"]),
             "avoid": ["不催促"],
             "angles": angles,
@@ -98,7 +99,7 @@ class ScriptedModel:
             for a, text in zip(payload["angles"], texts, strict=True)
         ]
         if fault_now and self.draft_fault == "foreign_fact":
-            drafts[0]["fact_ids"] = ["not_in_this_angle"]
+            drafts[0]["fact_ids"] = ["not_in_the_plan"]
         if fault_now and self.draft_fault == "made_up_price":
             drafts[1]["text"] = f"{salutation}，这只现在是七万五。"
         return {"drafts": drafts}
