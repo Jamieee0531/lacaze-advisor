@@ -10,10 +10,11 @@ from lacaze import __version__
 from lacaze.application.agents import RunDependencies, create_agents
 from lacaze.application.fact_text import WEEKDAYS
 from lacaze.application.guardrail import soft_warnings
+from lacaze.application.polish import apply_rewrites, find_flags, polish_payload
 from lacaze.application.preparation import prepare
 from lacaze.domain.models import CandidateMessages, CaseInput, StageUsage
 from lacaze.domain.pack import CasePack
-from lacaze.domain.plan import Plan
+from lacaze.domain.plan import Draft, Drafts, Edit, Plan
 from lacaze.domain.result import GenerationResult
 from lacaze.infrastructure.data import RuntimeData
 
@@ -22,45 +23,22 @@ REQUEST_LIMIT = 2
 
 
 class AdvisorWorkflow:
-    """Case -> preparation (rules) -> Planner -> Writer -> three drafts with angle notes."""
+    """Case -> preparation (rules) -> Planner -> Writer -> polish -> three drafts with notes."""
 
     def __init__(self, model: Model, data: RuntimeData):
         self.model_name = model.model_name
         self.data = data
-        self.planner, self.writer = create_agents(model, data)
+        self.planner, self.writer, self.polisher = create_agents(model, data)
 
     async def generate(self, case: CaseInput) -> GenerationResult:
         started_at = datetime.now(UTC)
         pack = prepare(case, self.data)
-        deps = RunDependencies(pack=pack, data=self.data)
-        usage: list[StageUsage] = []
-        trace: dict[str, list] = {}
-
-        async def run_stage(agent, stage: str, payload: dict):
-            start = perf_counter()
-            result = await agent.run(
-                json.dumps(payload, ensure_ascii=False, indent=1),
-                deps=deps,
-                usage_limits=UsageLimits(request_limit=REQUEST_LIMIT),
-            )
-            # Exact exchange with the model: assembled instructions, inputs, outputs, retries.
-            trace[stage] = ModelMessagesTypeAdapter.dump_python(result.all_messages(), mode="json")
-            counters = result.usage
-            usage.append(
-                StageUsage(
-                    stage=stage,
-                    duration_seconds=round(perf_counter() - start, 3),
-                    requests=counters.requests,
-                    input_tokens=counters.input_tokens,
-                    output_tokens=counters.output_tokens,
-                )
-            )
-            return result.output
-
-        deps.plan = await run_stage(self.planner, "planner", planner_payload(pack))
+        run = _Run(RunDependencies(pack=pack, data=self.data))
+        run.deps.plan = await run.stage(self.planner, "planner", planner_payload(pack))
         rules = self.data.scenarios[pack.scenario].writer_rules
-        drafts = await run_stage(self.writer, "writer", writer_payload(pack, deps.plan, rules))
-        deps.warnings += soft_warnings(drafts, pack, self.data)
+        written = await run.stage(self.writer, "writer", writer_payload(pack, run.deps.plan, rules))
+        drafts, edits = await self._polish(run, written.drafts)
+        run.deps.warnings += soft_warnings(Drafts(drafts=drafts), pack, self.data)
         return GenerationResult(
             case_id=case.case_id,
             scenario=case.scenario,
@@ -71,13 +49,72 @@ class AdvisorWorkflow:
             started_at=started_at,
             finished_at=datetime.now(UTC),
             pack=pack,
-            plan=deps.plan,
-            drafts=drafts.drafts,
-            candidates=CandidateMessages(messages=[d.text for d in drafts.drafts]),
-            warnings=deps.warnings,
-            usage=usage,
-            trace=trace,
+            plan=run.deps.plan,
+            drafts=drafts,
+            edits=edits,
+            candidates=CandidateMessages(messages=[d.text for d in drafts]),
+            warnings=run.deps.warnings,
+            usage=run.usage,
+            trace=run.trace,
         )
+
+    async def repolish(self, result: GenerationResult) -> GenerationResult:
+        """Apply the polish stage to an earlier result, for before/after comparisons."""
+        deps = RunDependencies(pack=result.pack, data=self.data, plan=result.plan)
+        run = _Run(deps, usage=list(result.usage), trace=dict(result.trace))
+        drafts, edits = await self._polish(run, result.drafts)
+        return result.model_copy(
+            update={
+                "app_version": __version__,
+                "configuration_hash": self.data.configuration_hash,
+                "finished_at": datetime.now(UTC),
+                "drafts": drafts,
+                "edits": edits,
+                "candidates": CandidateMessages(messages=[d.text for d in drafts]),
+                "warnings": [*result.warnings, *deps.warnings],
+                "usage": run.usage,
+                "trace": run.trace,
+            }
+        )
+
+    async def _polish(self, run: "_Run", drafts: list[Draft]) -> tuple[list[Draft], list[Edit]]:
+        """Only drafts with a flagged sentence cost a model call."""
+        run.deps.flags = find_flags(drafts, self.data.polish)
+        if not run.deps.flags:
+            return drafts, []
+        payload = polish_payload(run.deps.pack, drafts, run.deps.flags, self.data)
+        rewrites = await run.stage(self.polisher, "polish", payload)
+        return apply_rewrites(drafts, rewrites.rewrites, run.deps.flags)
+
+
+class _Run:
+    """Per-case usage and trace, collected stage by stage."""
+
+    def __init__(self, deps: RunDependencies, usage=None, trace=None):
+        self.deps = deps
+        self.usage: list[StageUsage] = usage if usage is not None else []
+        self.trace: dict[str, list] = trace if trace is not None else {}
+
+    async def stage(self, agent, stage: str, payload: dict):
+        start = perf_counter()
+        result = await agent.run(
+            json.dumps(payload, ensure_ascii=False, indent=1),
+            deps=self.deps,
+            usage_limits=UsageLimits(request_limit=REQUEST_LIMIT),
+        )
+        # Exact exchange with the model: assembled instructions, inputs, outputs, retries.
+        self.trace[stage] = ModelMessagesTypeAdapter.dump_python(result.all_messages(), mode="json")
+        counters = result.usage
+        self.usage.append(
+            StageUsage(
+                stage=stage,
+                duration_seconds=round(perf_counter() - start, 3),
+                requests=counters.requests,
+                input_tokens=counters.input_tokens,
+                output_tokens=counters.output_tokens,
+            )
+        )
+        return result.output
 
 
 def _history(pack: CasePack) -> list[dict]:

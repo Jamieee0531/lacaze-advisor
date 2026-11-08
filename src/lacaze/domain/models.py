@@ -212,7 +212,7 @@ class CandidateMessages(Contract):
 
 
 class StageUsage(Contract):
-    stage: Literal["planner", "writer"]
+    stage: Literal["planner", "writer", "polish"]
     duration_seconds: float
     requests: int
     input_tokens: int

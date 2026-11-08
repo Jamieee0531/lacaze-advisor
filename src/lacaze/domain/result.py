@@ -4,7 +4,7 @@ from pydantic import Field
 
 from lacaze.domain.models import CandidateMessages, Contract, Scenario, StageUsage
 from lacaze.domain.pack import CasePack
-from lacaze.domain.plan import Draft, Plan
+from lacaze.domain.plan import Draft, Edit, Plan
 
 
 class GenerationResult(Contract):
@@ -21,6 +21,9 @@ class GenerationResult(Contract):
     pack: CasePack
     plan: Plan
     drafts: list[Draft]
+    edits: list[Edit] = Field(
+        default_factory=list, description="Sentences the polish stage changed, before and after."
+    )
     candidates: CandidateMessages
     warnings: list[str]
     usage: list[StageUsage]

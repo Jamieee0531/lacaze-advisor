@@ -1,0 +1,27 @@
+{
+  "_note": "Wording polish after the Writer. Code matches these patterns sentence by sentence; only matched sentences go to the polish model, which rewrites or deletes that sentence alone. Patterns are written from the habits seen across the 50 cases, not from single messages.",
+  "kinds": {
+    "reassurance": {
+      "label": "安抚话",
+      "patterns": [
+        "不(?:用|必)?特意回",
+        "(?:不用|不必|无需)(?:回复|回我)",
+        "不(?:用|必)?着?急",
+        "(?:按|照)(?:您|你)?(?:自己)?的节奏",
+        "由您(?:来)?(?:决定|定)",
+        "没有任何压力|不(?:会)?给您(?:任何)?压力"
+      ]
+    },
+    "defensive": {
+      "label": "防御式说法",
+      "patterns": [
+        "我(?:这边|手上)?(?:也|目前|现在|暂时|还)*没有[^，。；]{0,10}?(?:说法|信息|数据|规格|资料|办法(?:能|可以)给您)",
+        "不(?:乱|随便)(?:说|讲|支招|下结论)",
+        "不想(?:随口|随便|凭[^，。]{0,4})(?:说|给|下结论)",
+        "不替您下结论",
+        "不想让您(?:抱着|抱有)[^，。]{0,4}期待|让您误以为",
+        "无法给您[^，。]{0,6}(?:答复|说法)"
+      ]
+    }
+  }
+}

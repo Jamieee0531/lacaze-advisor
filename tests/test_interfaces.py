@@ -35,6 +35,17 @@ async def test_batch_preserves_inputs_and_outputs_without_quality_scores(data, c
     assert "score" not in result
 
 
+async def test_repolish_run_writes_a_new_run_the_evaluator_can_read(data, cases, tmp_path):
+    from lacaze.application.batch import repolish_run
+    from lacaze.evaluation.loader import load_run
+
+    workflow = AdvisorWorkflow(ScriptedModel().model, data)
+    await run_batch(workflow, cases[:2], tmp_path / "run")
+    summary = await repolish_run(workflow, tmp_path / "run", tmp_path / "polished")
+    assert summary["total"] == 2 and summary["error"] == 0 and summary["edits"] == 0
+    assert [c.case_id for c in load_run(tmp_path / "polished").cases] == ["C01", "C02"]
+
+
 async def test_batch_records_failure_without_fabricating_candidates(data, cases, tmp_path):
     workflow = AdvisorWorkflow(ScriptedModel().model, data)
     directory = tmp_path / "failed-run"

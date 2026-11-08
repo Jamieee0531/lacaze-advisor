@@ -7,6 +7,7 @@ from typing import Any
 
 from lacaze.application.workflow import AdvisorWorkflow
 from lacaze.domain.models import CaseInput
+from lacaze.domain.result import GenerationResult
 
 
 async def run_batch(
@@ -100,6 +101,64 @@ async def run_batch(
         "error": sum(r["status"] == "error" for r in results),
         "cases": results,
         "evaluation": "Execution results only. No ground truth or semantic quality score.",
+    }
+    (output_dir / "summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    return summary
+
+
+async def repolish_run(
+    workflow: AdvisorWorkflow, run_dir: Path, output_dir: Path, concurrency: int = 1
+) -> dict[str, Any]:
+    """Apply the polish stage to an earlier batch without regenerating it.
+
+    Pack, plan and every unflagged draft are carried over as they were, so a before/after
+    comparison isolates the polish stage. Failed records are copied unchanged.
+    """
+    if not 1 <= concurrency <= 4:
+        raise ValueError("concurrency must be between 1 and 4")
+    paths = sorted(p for p in run_dir.glob("*.json") if p.stem not in {"summary", "configuration"})
+    if not paths:
+        raise FileNotFoundError(f"No case records found in {run_dir}")
+    output_dir.mkdir(parents=True, exist_ok=False)
+    (output_dir / "configuration.json").write_text(
+        json.dumps(workflow.data.source_files, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    semaphore = asyncio.Semaphore(concurrency)
+
+    async def execute_record(path: Path) -> dict[str, Any]:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        outcome = {"case_id": path.stem, "status": record.get("status"), "edits": 0}
+        if record.get("status") == "success":
+            async with semaphore:
+                try:
+                    result = await workflow.repolish(
+                        GenerationResult.model_validate(record["result"])
+                    )
+                    record = {**record, "result": result.model_dump(mode="json")}
+                    outcome["edits"] = len(result.edits)
+                except Exception as exc:
+                    # Keep the earlier drafts; do not persist provider error bodies.
+                    outcome.update(status="error", error_type=type(exc).__name__)
+            print(f"{path.stem}: {outcome['status']} ({outcome['edits']} edits)", flush=True)
+        (output_dir / path.name).write_text(
+            json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        return outcome
+
+    cases = await asyncio.gather(*(execute_record(p) for p in paths))
+    summary = {
+        "completed_at": datetime.now(UTC).isoformat(),
+        "source_run": str(run_dir),
+        "model": workflow.model_name,
+        "configuration_hash": workflow.data.configuration_hash,
+        "total": len(cases),
+        "error": sum(c["status"] == "error" for c in cases),
+        "polished_cases": sum(c["edits"] > 0 for c in cases),
+        "edits": sum(c["edits"] for c in cases),
+        "cases": cases,
     }
     (output_dir / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

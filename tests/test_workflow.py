@@ -22,7 +22,7 @@ async def test_planner_sees_pack_and_writer_sees_only_cited_facts(data, cases):
         assert [q["message_id"] for q in angle["quotes"]] == planned.message_ids
         # Quotes are copied by code from the history, never retyped by a model.
         assert all(q["text"] for q in angle["quotes"])
-    assert [u.stage for u in result.usage] == ["planner", "writer"]
+    assert [u.stage for u in result.usage] == ["planner", "writer", "polish"]
     assert result.candidates.messages == [d.text for d in result.drafts]
     assert not result.warnings
 

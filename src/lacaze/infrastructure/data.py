@@ -6,7 +6,7 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from lacaze.domain.models import BrandPolicy, CaseInput, Product, Scenario, ScenarioPolicy
-from lacaze.domain.pack import GuardrailConfig, LoadingTable
+from lacaze.domain.pack import GuardrailConfig, LoadingTable, PolishConfig
 from lacaze.infrastructure.catalog import ProductCatalog
 from lacaze.infrastructure.foundation import (
     CalendarDay,
@@ -28,6 +28,7 @@ class RuntimeData:
     foundation: Foundation
     loading: LoadingTable
     guardrail: GuardrailConfig
+    polish: PolishConfig
     prompts: dict[str, str]
     writer_examples: dict[str, str]
     configuration_hash: str
@@ -52,6 +53,8 @@ class RuntimeData:
             "prompts/plan.md",
             "prompts/write.md",
             "prompts/writer_examples.json",
+            "context/polish.json",
+            "prompts/polish.md",
         ]
         raw = {path: (directory / path).read_text(encoding="utf-8") for path in paths}
         brand = BrandPolicy.model_validate_json(raw[paths[0]])
@@ -79,7 +82,8 @@ class RuntimeData:
             foundation,
             LoadingTable.model_validate_json(_without_notes(raw[paths[10]])),
             _guardrail(raw["context/guardrail.json"], raw["evaluation/checks.json"]),
-            {name: raw[f"prompts/{name}.md"] for name in ["plan", "write"]},
+            PolishConfig.model_validate_json(_without_notes(raw["context/polish.json"])),
+            {name: raw[f"prompts/{name}.md"] for name in ["plan", "write", "polish"]},
             _writer_examples(raw["prompts/writer_examples.json"]),
             digest,
             raw,

@@ -62,7 +62,7 @@ def _hard(draft: Draft, pack: CasePack, plan: Plan, data: RuntimeData) -> list[s
         problems.append(f"出现了事实中没有的日期 {[f'{m}月{d}日' for m, d in dates]}")
     if times := sorted(extract_times(text) - extract_times(joined)):
         problems.append(f"出现了事实中没有的时间 {times}")
-    if products := sorted(_mentioned(text, data) - _in_scope(pack, data)):
+    if products := sorted(mentioned_products(text, data) - _in_scope(pack, data)):
         problems.append(f"提到了本次不涉及的商品 {products}")
     if banned := [p for p in config.banned_phrases if p in text]:
         problems.append(f"用了不合品牌口吻的说法 {banned}")
@@ -88,14 +88,14 @@ def _names(data: RuntimeData) -> list[str]:
     return [short_name(p) for p in data.catalog.products.values()]
 
 
-def _mentioned(text: str, data: RuntimeData) -> set[str]:
+def mentioned_products(text: str, data: RuntimeData) -> set[str]:
     return mentioned(text, _names(data))
 
 
 def _in_scope(pack: CasePack, data: RuntimeData) -> set[str]:
     """Products the case is about, owns or the event features. Policies do not count."""
     texts = [m.text for m in pack.history] + [f.text for f in pack.facts if f.kind in SCOPE_KINDS]
-    return _mentioned("\n".join(texts), data)
+    return mentioned_products("\n".join(texts), data)
 
 
 def _similarity(a: str, b: str) -> float:

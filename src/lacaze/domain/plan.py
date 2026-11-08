@@ -1,4 +1,4 @@
-"""Planner and Writer outputs."""
+"""Planner, Writer and polish outputs."""
 
 from __future__ import annotations
 
@@ -47,3 +47,30 @@ class Drafts(Contract):
         if any(not re.search(r"[一-鿿]", t) for t in texts):
             raise ValueError("Each draft must be written in Chinese")
         return sorted(drafts, key=lambda d: d.angle)
+
+
+class Flag(Contract):
+    """A sentence the polish patterns matched, found by code."""
+
+    angle: Literal[1, 2, 3]
+    sentence: str
+    kinds: list[str]
+
+
+class Rewrite(Contract):
+    angle: Literal[1, 2, 3]
+    sentence: str = Field(description="标出的原句，逐字照抄")
+    replacement: str = Field(description="改后的句子；整句删去时为空字符串；不需要改时原样照抄")
+
+
+class Rewrites(Contract):
+    rewrites: list[Rewrite]
+
+
+class Edit(Contract):
+    """One sentence the polish stage changed, kept in the result for review."""
+
+    angle: Literal[1, 2, 3]
+    kinds: list[str]
+    before: str
+    after: str

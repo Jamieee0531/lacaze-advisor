@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from lacaze.domain.models import (
     ClientTier,
@@ -81,6 +82,24 @@ class GuardrailConfig(Contract):
     similar_drafts_threshold: float = Field(gt=0, le=1)
     banned_phrases: list[str]
     discount_terms: list[str]
+
+
+class PhraseKind(Contract):
+    label: str = Field(min_length=1)
+    patterns: list[str] = Field(min_length=1)
+
+    @field_validator("patterns")
+    @classmethod
+    def compiles(cls, patterns: list[str]) -> list[str]:
+        for pattern in patterns:
+            re.compile(pattern)
+        return patterns
+
+
+class PolishConfig(Contract):
+    """data/context/polish.json: wording habits the polish stage looks for, by kind."""
+
+    kinds: dict[str, PhraseKind] = Field(min_length=1)
 
 
 class ClientCard(Contract):

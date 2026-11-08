@@ -21,13 +21,14 @@ def cases():
 class ScriptedModel:
     """Exercises real PydanticAI orchestration, not model quality. No network.
 
-    `plan_fault` / `draft_fault` make the first answer of that stage break a code check,
-    or every answer when `persistent=True`, to exercise retry and warnings.
+    `plan_fault` / `draft_fault` / `polish_fault` make the first answer of that stage break a
+    code check, or every answer when `persistent=True`, to exercise retry and warnings.
     """
 
-    def __init__(self, *, plan_fault=None, draft_fault=None, persistent=False):
+    def __init__(self, *, plan_fault=None, draft_fault=None, polish_fault=None, persistent=False):
         self.plan_fault = plan_fault
         self.draft_fault = draft_fault
+        self.polish_fault = polish_fault
         self.persistent = persistent
         self.seen = []  # (stage, payload, instructions)
         self.model = FunctionModel(self.respond, model_name="offline-test-model")
@@ -41,6 +42,8 @@ class ScriptedModel:
         schema = info.output_tools[0].parameters_json_schema["properties"]
         if "angles" in schema:
             stage, output = "planner", self._plan(payload, fault_now)
+        elif "rewrites" in schema:
+            stage, output = "polish", self._rewrites(payload, fault_now)
         else:
             stage, output = "writer", self._drafts(payload, fault_now)
         self.seen.append((stage, payload, instructions))
@@ -87,7 +90,7 @@ class ScriptedModel:
         texts = [
             "这两款可以先了解一下。",
             "先接着您上次提到的需求聊聊。",
-            "您可以按自己的节奏慢慢看。",
+            "先留个余地。您可以按自己的节奏慢慢看。",
         ]
         drafts = [
             {"angle": a["angle"], "text": f"{salutation}，{text}", "fact_ids": []}
@@ -98,3 +101,13 @@ class ScriptedModel:
         if fault_now and self.draft_fault == "made_up_price":
             drafts[1]["text"] = f"{salutation}，这只现在是七万五。"
         return {"drafts": drafts}
+
+    def _rewrites(self, payload, fault_now):
+        """Delete every flagged sentence; the fault adds a price the sentence never had."""
+        rewrites = [
+            {"angle": f["angle"], "sentence": f["sentence"], "replacement": ""}
+            for f in payload["flagged"]
+        ]
+        if fault_now and self.polish_fault == "made_up_price":
+            rewrites[0]["replacement"] = "七万五。"
+        return {"rewrites": rewrites}

@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from lacaze.application.batch import run_batch
+from lacaze.application.batch import repolish_run, run_batch
 from lacaze.application.workflow import AdvisorWorkflow
 from lacaze.domain.models import CaseInput, Scenario
 from lacaze.evaluation import cli as evaluation_cli
@@ -28,6 +28,10 @@ def parser() -> argparse.ArgumentParser:
     batch.add_argument("--case-ids", nargs="+")
     batch.add_argument("--output-dir", type=Path)
     batch.add_argument("--concurrency", type=int, choices=range(1, 5), default=1)
+    repolish = sub.add_parser("polish", help="Apply the polish stage to an earlier batch run")
+    repolish.add_argument("--run", type=Path, required=True)
+    repolish.add_argument("--output-dir", type=Path, required=True)
+    repolish.add_argument("--concurrency", type=int, choices=range(1, 5), default=1)
     evaluation_cli.add_parser(sub)
     return root
 
@@ -56,6 +60,15 @@ async def execute(args: argparse.Namespace) -> int:
             )
         )
         return 0
+    if args.command == "polish":
+        model, client = create_model(settings)
+        try:
+            workflow = AdvisorWorkflow(model, data)
+            summary = await repolish_run(workflow, args.run, args.output_dir, args.concurrency)
+        finally:
+            await client.close()
+        print(json.dumps({k: v for k, v in summary.items() if k != "cases"}, indent=2))
+        return 1 if summary["error"] else 0
     if args.command == "generate" and args.input:
         cases = [CaseInput.model_validate_json(args.input.read_text(encoding="utf-8"))]
     else:

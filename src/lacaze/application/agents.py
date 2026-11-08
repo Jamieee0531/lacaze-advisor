@@ -1,5 +1,6 @@
-"""Planner and Writer agents. Instructions are assembled from three layers:
-business (brand, always), scenario (chosen by the route) and case (the user message)."""
+"""Planner, Writer and polish agents. Planner and Writer instructions are assembled from
+three layers: business (brand, always), scenario (chosen by the route) and case (the user
+message). The polish agent only sees the flagged sentences and their messages."""
 
 import json
 from dataclasses import dataclass, field
@@ -9,8 +10,9 @@ from pydantic_ai.models import Model
 
 from lacaze.application.guardrail import draft_problems
 from lacaze.application.plan_checks import plan_problems, sanitize_plan
+from lacaze.application.polish import rewrite_problems
 from lacaze.domain.pack import CasePack
-from lacaze.domain.plan import Drafts, Plan
+from lacaze.domain.plan import Drafts, Flag, Plan, Rewrites
 from lacaze.infrastructure.data import RuntimeData
 
 
@@ -21,6 +23,7 @@ class RunDependencies:
     pack: CasePack
     data: RuntimeData
     plan: Plan | None = None
+    flags: list[Flag] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 
@@ -63,7 +66,11 @@ def writer_instructions(ctx: RunContext[RunDependencies]) -> str:
     )
 
 
-def create_agents(model: Model, data: RuntimeData) -> tuple[Agent, Agent]:
+def polish_instructions(ctx: RunContext[RunDependencies]) -> str:
+    return ctx.deps.data.prompts["polish"]
+
+
+def create_agents(model: Model, data: RuntimeData) -> tuple[Agent, Agent, Agent]:
     common = {
         "model": model,
         "deps_type": RunDependencies,
@@ -72,6 +79,9 @@ def create_agents(model: Model, data: RuntimeData) -> tuple[Agent, Agent]:
     }
     planner = Agent(**common, output_type=Plan, name="planner", instructions=planner_instructions)
     writer = Agent(**common, output_type=Drafts, name="writer", instructions=writer_instructions)
+    polisher = Agent(
+        **common, output_type=Rewrites, name="polish", instructions=polish_instructions
+    )
 
     @planner.output_validator
     def validate_plan(ctx: RunContext[RunDependencies], plan: Plan) -> Plan:
@@ -92,4 +102,17 @@ def create_agents(model: Model, data: RuntimeData) -> tuple[Agent, Agent]:
         ctx.deps.warnings += [f"消息：{p}" for p in problems]
         return drafts
 
-    return planner, writer
+    @polisher.output_validator
+    def validate_rewrites(ctx: RunContext[RunDependencies], rewrites: Rewrites) -> Rewrites:
+        deps = ctx.deps
+        checked = [
+            (r, rewrite_problems(r, deps.flags, deps.pack, deps.data)) for r in rewrites.rewrites
+        ]
+        problems = [p for _, found in checked for p in found]
+        if problems and ctx.retry < ctx.max_retries:
+            raise ModelRetry("改写有以下问题，请修正后重新输出：\n- " + "\n- ".join(problems))
+        # Last attempt: keep the original sentence wherever the rewrite fails a check.
+        deps.warnings += [f"修整：{p}，已保留原句" for p in problems]
+        return Rewrites(rewrites=[r for r, found in checked if not found])
+
+    return planner, writer, polisher
