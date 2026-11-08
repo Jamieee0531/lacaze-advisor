@@ -6,11 +6,11 @@ Every change below started from an evaluation result and was judged by the next 
 
 | Version | What changed | Commit |
 |---|---|---|
-| v0.1.2 | Single generation step | `396c747` |
-| v0.2.0 | Facts retrieved by code; Planner and Writer; code checks with one retry | `2a4846a` (development set), `2d99d83` (test set) |
-| v0.2.1 | Polish: rewrite only sentences that match known problem patterns | `5c0db98` |
-| v0.2.2 | Planner lists each point the client asked | `34d5dae` |
-| v0.2.3 | One set of facts shared by all three messages | `bfd3571` |
+| v0.1.2 | Single generation step | [`396c747`](https://github.com/Jamieee0531/lacaze-advisor/commit/396c747) |
+| v0.2.0 | Facts retrieved by code; Planner and Writer; code checks with one retry | [`2a4846a`](https://github.com/Jamieee0531/lacaze-advisor/commit/2a4846a) (development set), [`2d99d83`](https://github.com/Jamieee0531/lacaze-advisor/commit/2d99d83) (test set) |
+| v0.2.1 | Polish: rewrite only sentences that match known problem patterns | [`5c0db98`](https://github.com/Jamieee0531/lacaze-advisor/commit/5c0db98) |
+| v0.2.2 | Planner lists each point the client asked | [`34d5dae`](https://github.com/Jamieee0531/lacaze-advisor/commit/34d5dae) |
+| v0.2.3 | One set of facts shared by all three messages | [`bfd3571`](https://github.com/Jamieee0531/lacaze-advisor/commit/bfd3571) |
 
 ## Round 1: Rebuild the architecture (v0.1.2 → v0.2.0)
 
