@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from lacaze import __version__
 from lacaze.application.preparation import prepare
@@ -13,7 +14,12 @@ from lacaze.domain.result import GenerationResult
 from lacaze.infrastructure.data import RuntimeData, load_cases
 from lacaze.infrastructure.provider import create_model
 from lacaze.infrastructure.settings import Settings
-from lacaze.interfaces.demo import foundation_payload, require_same_origin, stream_generation
+from lacaze.interfaces.demo import (
+    GenerationStreamResponse,
+    foundation_payload,
+    require_same_origin,
+    stream_generation,
+)
 
 WEB_DIR = Path(__file__).with_name("web")
 
@@ -29,18 +35,20 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
             app.state.workflow = AdvisorWorkflow(model, data)
         else:
             app.state.workflow = workflow
-        app.state.demo_cases = [
-            case.model_dump(mode="json")
-            for name in ("development.jsonl", "test.jsonl")
-            for case in load_cases(settings.data_dir / "cases" / name)
-        ]
         try:
+            app.state.demo_cases = [
+                case.model_dump(mode="json")
+                for name in ("development.jsonl", "test.jsonl")
+                if (settings.data_dir / "cases" / name).is_file()
+                for case in load_cases(settings.data_dir / "cases" / name)
+            ]
             yield
         finally:
             if client:
                 await client.close()
 
     app = FastAPI(title="LACAZE Advisor", version=__version__, lifespan=lifespan)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
     app.mount("/web", StaticFiles(directory=WEB_DIR, check_dir=False), name="web")
 
     @app.get("/", include_in_schema=False)
@@ -69,11 +77,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
 
     @app.post("/generate/stream", dependencies=[Depends(require_same_origin)])
     async def generate_stream(case: CaseInput) -> StreamingResponse:
-        return StreamingResponse(
-            stream_generation(app.state.workflow, case),
-            media_type="text/event-stream",
-            headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
-        )
+        return GenerationStreamResponse(stream_generation(app.state.workflow, case))
 
     @app.get("/health")
     async def health() -> dict:

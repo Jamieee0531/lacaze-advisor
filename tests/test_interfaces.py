@@ -11,7 +11,7 @@ from tests.conftest import ScriptedModel
 
 def test_http_validates_case_and_returns_same_workflow(data, cases):
     workflow = AdvisorWorkflow(ScriptedModel().model, data)
-    with TestClient(create_app(workflow)) as client:
+    with TestClient(create_app(workflow), base_url="http://127.0.0.1") as client:
         assert len(client.get("/scenarios").json()) == 6
         payload = cases[0].model_dump(mode="json")
         response = client.post("/generate", json=payload)
