@@ -8,13 +8,17 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 ## Example
 
-Scenario: *Birthday and festive greetings*. The client registered recently and has talked to the advisor once. There is little to personalise, and the messages must not sell.
+Scenario: *Price objection*. A client who has been considering the Margaux (CNY 68,000) writes:
+
+> 我还是想考虑 Margaux。如果这次就买，能不能给我打个九折？
+
+The brand does not discount, and the advisor must say so without sounding scripted or pushing. Three candidates, each with a different angle:
 
 | Angle | Message |
 |---|---|
-| 简短生日祝福 | 许小姐，生日快乐。愿您今天过得轻松愉快，新的一岁一切顺心。 |
-| 初见的记忆 | 许小姐，生日快乐。十月在澄园店见到您，到现在还有印象。今天是您的生日，想在这里送上一句祝福，愿您新的一岁顺心舒展。 |
-| 她随口说的喜欢 | 许小姐，生日快乐。还记得您那天逛店时随口说喜欢象牙白，那份轻松随意的眼光让我印象很深。愿您今天也过得自在愉快。 |
+| 直接回应 | 吴女士，谢谢您还惦记着 Margaux。九折这一点我没办法答应：LACAZE 全国官方门店都是统一定价，不打折、不议价，也没有会员折扣，Margaux 是 6.8 万元。 |
+| 扣子与工艺 | 吴女士，九折这一点我得如实告诉您：我们不打折、不议价，Margaux 全国统一 6.8 万元。您之前说喜欢它的扣子，那是马镫扣，源自品牌马具工坊的传统；包身的马鞍针脚也是全手工缝制。 |
+| 购买后服务 | 吴女士，九折这边没办法做，我们全国官方门店统一定价，不打折、不议价。另外告诉您一下：在官方门店购买的手袋，每年可以送店做一次免费基础护理，内侧皮标也可以免费烫印最多三个字母。如果想再看看实物、试背，提前约个时间，我一对一接待您。 |
 
 ## How it works
 
