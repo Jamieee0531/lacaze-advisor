@@ -1,88 +1,141 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 520" width="1700" height="520" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif">
-<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a94a0"/></marker></defs>
-<rect width="1700" height="520" fill="#fcfcfb"/>
-<text x="40" y="56" font-size="30" fill="#1f2328" text-anchor="start" font-weight="700">LACAZE Advisor</text>
-<rect x="40" y="200" width="220" height="190" rx="14" fill="#ffffff" stroke="#8a94a0" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="56" y="230" font-size="16" fill="#1f2328" text-anchor="start" font-weight="700">Case input</text>
-<rect x="56" y="246" width="188" height="22" rx="6" fill="#fff7e2" stroke="#e3b852" stroke-width="1.2"/>
-<text x="68" y="262" font-size="13" fill="#1f2328" text-anchor="start">Scenario</text>
-<rect x="56" y="274" width="188" height="22" rx="6" fill="#fff7e2" stroke="#e3b852" stroke-width="1.2"/>
-<text x="68" y="290" font-size="13" fill="#1f2328" text-anchor="start">Case date</text>
-<rect x="56" y="302" width="188" height="22" rx="6" fill="#fff7e2" stroke="#e3b852" stroke-width="1.2"/>
-<text x="68" y="318" font-size="13" fill="#1f2328" text-anchor="start">Client</text>
-<rect x="56" y="330" width="188" height="22" rx="6" fill="#fff7e2" stroke="#e3b852" stroke-width="1.2"/>
-<text x="68" y="346" font-size="13" fill="#1f2328" text-anchor="start">Conversation</text>
-<rect x="56" y="358" width="188" height="22" rx="6" fill="#fff7e2" stroke="#e3b852" stroke-width="1.2"/>
-<text x="68" y="374" font-size="13" fill="#1f2328" text-anchor="start">Product / event</text>
-<rect x="300" y="80" width="130" height="52" rx="10" fill="#fff7e2" stroke="#e3b852" stroke-width="1.6"/>
-<text x="365.0" y="112" font-size="14" fill="#1f2328" text-anchor="middle" font-weight="700">Foundation data</text>
-<line x1="365.0" y1="132" x2="365.0" y2="198" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<rect x="445" y="80" width="130" height="52" rx="10" fill="#fff7e2" stroke="#e3b852" stroke-width="1.6"/>
-<text x="510.0" y="112" font-size="14" fill="#1f2328" text-anchor="middle" font-weight="700">Loading table</text>
-<line x1="510.0" y1="132" x2="510.0" y2="198" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<rect x="620" y="80" width="800" height="52" rx="10" fill="#fff7e2" stroke="#e3b852" stroke-width="1.6"/>
-<text x="1020" y="112" font-size="14" fill="#1f2328" text-anchor="middle" font-weight="700">Layered instructions: brand rules, scenario rules, style examples</text>
-<line x1="730.0" y1="132" x2="730.0" y2="198" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<line x1="1020.0" y1="132" x2="1020.0" y2="198" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<line x1="1310.0" y1="132" x2="1310.0" y2="198" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<rect x="330" y="200" width="220" height="190" rx="14" fill="#eef2f7" stroke="#9aa8ba" stroke-width="1.8"/>
-<rect x="346" y="216" width="53.92" height="22" rx="11" fill="#475569" stroke="#475569" stroke-width="0"/>
-<text x="372.96" y="231" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="700">CODE</text>
-<text x="346" y="268" font-size="22" fill="#1f2328" text-anchor="start" font-weight="700">Prepare</text>
-<text x="346" y="294" font-size="14" fill="#5b6470" text-anchor="start">Picks facts per scenario</text>
-<text x="346" y="314" font-size="14" fill="#5b6470" text-anchor="start">Tier, dates, fact IDs</text>
-<rect x="620" y="200" width="220" height="190" rx="14" fill="#f3effe" stroke="#9b7be8" stroke-width="1.8"/>
-<rect x="636" y="216" width="62.400000000000006" height="22" rx="11" fill="#6d28d9" stroke="#6d28d9" stroke-width="0"/>
-<text x="667.2" y="231" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="700">MODEL</text>
-<text x="636" y="268" font-size="22" fill="#1f2328" text-anchor="start" font-weight="700">Planner</text>
-<text x="636" y="294" font-size="14" fill="#5b6470" text-anchor="start">Client asks, fact IDs</text>
-<text x="636" y="314" font-size="14" fill="#5b6470" text-anchor="start">Three distinct angles</text>
-<rect x="632" y="350" width="196" height="28" rx="8" fill="#e7f6e9" stroke="#7cc487" stroke-width="1.2"/>
-<text x="730.0" y="369" font-size="12.5" fill="#166534" text-anchor="middle" font-weight="700">Check: IDs, angles</text>
-<rect x="910" y="200" width="220" height="190" rx="14" fill="#f3effe" stroke="#9b7be8" stroke-width="1.8"/>
-<rect x="926" y="216" width="62.400000000000006" height="22" rx="11" fill="#6d28d9" stroke="#6d28d9" stroke-width="0"/>
-<text x="957.2" y="231" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="700">MODEL</text>
-<text x="926" y="268" font-size="22" fill="#1f2328" text-anchor="start" font-weight="700">Writer</text>
-<text x="926" y="294" font-size="14" fill="#5b6470" text-anchor="start">One message per angle</text>
-<text x="926" y="314" font-size="14" fill="#5b6470" text-anchor="start">Only the planned facts</text>
-<rect x="922" y="350" width="196" height="28" rx="8" fill="#e7f6e9" stroke="#7cc487" stroke-width="1.2"/>
-<text x="1020.0" y="369" font-size="12.5" fill="#166534" text-anchor="middle" font-weight="700">Check: facts, length</text>
-<rect x="1200" y="200" width="220" height="190" rx="14" fill="#eef2f7" stroke="#9aa8ba" stroke-width="1.8"/>
-<rect x="1216" y="216" width="109.04" height="22" rx="11" fill="#475569" stroke="#475569" stroke-width="0"/>
-<text x="1270.52" y="231" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="700">CODE + MODEL</text>
-<text x="1216" y="268" font-size="22" fill="#1f2328" text-anchor="start" font-weight="700">Polish</text>
-<text x="1216" y="294" font-size="14" fill="#5b6470" text-anchor="start">Flags stock phrases</text>
-<text x="1216" y="314" font-size="14" fill="#5b6470" text-anchor="start">Rewrites only those</text>
-<rect x="1490" y="200" width="170" height="190" rx="14" fill="#ffffff" stroke="#475569" stroke-width="1.8"/>
-<rect x="1506" y="216" width="68.76" height="22" rx="11" fill="#475569" stroke="#475569" stroke-width="0"/>
-<text x="1540.38" y="231" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="700">OUTPUT</text>
-<text x="1506" y="268" font-size="20" fill="#1f2328" text-anchor="start" font-weight="700">3 messages</text>
-<rect x="1506" y="286" width="138" height="26" rx="7" fill="#f4f4f1" stroke="#e1e1dc" stroke-width="1.2"/>
-<text x="1518" y="304" font-size="13" fill="#1f2328" text-anchor="start">Angle 1</text>
-<rect x="1506" y="318" width="138" height="26" rx="7" fill="#f4f4f1" stroke="#e1e1dc" stroke-width="1.2"/>
-<text x="1518" y="336" font-size="13" fill="#1f2328" text-anchor="start">Angle 2</text>
-<rect x="1506" y="350" width="138" height="26" rx="7" fill="#f4f4f1" stroke="#e1e1dc" stroke-width="1.2"/>
-<text x="1518" y="368" font-size="13" fill="#1f2328" text-anchor="start">Angle 3</text>
-<line x1="264" y1="300" x2="326" y2="300" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<text x="295.0" y="292" font-size="11.5" fill="#5b6470" text-anchor="middle">case</text>
-<line x1="554" y1="300" x2="616" y2="300" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<text x="585.0" y="292" font-size="11.5" fill="#5b6470" text-anchor="middle">CasePack</text>
-<line x1="844" y1="300" x2="906" y2="300" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<text x="875.0" y="292" font-size="11.5" fill="#5b6470" text-anchor="middle">plan</text>
-<line x1="1134" y1="300" x2="1196" y2="300" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<text x="1165.0" y="292" font-size="11.5" fill="#5b6470" text-anchor="middle">drafts</text>
-<line x1="1424" y1="300" x2="1486" y2="300" stroke="#8a94a0" stroke-width="2" marker-end="url(#ah)"/>
-<rect x="620" y="420" width="800" height="40" rx="10" fill="#f3effe" stroke="#9b7be8" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="1020" y="445" font-size="13.5" fill="#6d28d9" text-anchor="middle" font-weight="700">Anthropic API via PydanticAI</text>
-<line x1="730.0" y1="420" x2="730.0" y2="393" stroke="#9b7be8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#ah)"/>
-<line x1="1020.0" y1="420" x2="1020.0" y2="393" stroke="#9b7be8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#ah)"/>
-<line x1="1310.0" y1="420" x2="1310.0" y2="393" stroke="#9b7be8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#ah)"/>
-<rect x="40" y="482" width="18" height="18" rx="5" fill="#eef2f7" stroke="#9aa8ba" stroke-width="1.6"/>
-<text x="66" y="496" font-size="13" fill="#5b6470" text-anchor="start">Code</text>
-<rect x="129.8" y="482" width="18" height="18" rx="5" fill="#f3effe" stroke="#9b7be8" stroke-width="1.6"/>
-<text x="155.8" y="496" font-size="13" fill="#5b6470" text-anchor="start">Model call</text>
-<rect x="250.34000000000003" y="482" width="18" height="18" rx="5" fill="#fff7e2" stroke="#e3b852" stroke-width="1.6"/>
-<text x="276.34000000000003" y="496" font-size="13" fill="#5b6470" text-anchor="start">Data</text>
-<rect x="336.96000000000004" y="482" width="18" height="18" rx="5" fill="#e7f6e9" stroke="#7cc487" stroke-width="1.6"/>
-<text x="362.96000000000004" y="496" font-size="13" fill="#5b6470" text-anchor="start">Check, retry once</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1360" viewBox="0 0 2200 1360"><defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M 0 0 L 7 3.5 L 0 7 z" fill="#7b8c9f"/></marker></defs><rect width="100%" height="100%" fill="#ffffff"/><g font-family="Helvetica, Arial, sans-serif"><text fill="#233449" font-size="34" font-weight="600" text-anchor="start"><tspan x="50" y="69.0864">LACAZE Advisor · Runtime Architecture</tspan></text>
+<text fill="#64748b" font-size="20" font-weight="400" text-anchor="start"><tspan x="52" y="113.992">A fixed workflow: prepare context → plan with shared facts → draft three replies → selectively polish</tspan></text>
+<rect x="1515" y="42" width="19" height="19" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="start"><tspan x="1543" y="57.7932">Python logic</tspan></text>
+<rect x="1670" y="42" width="19" height="19" rx="10" fill="#efeafa" stroke="#afa0cf" stroke-width="1.3" />
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="start"><tspan x="1698" y="57.7932">LLM call</tspan></text>
+<rect x="1825" y="42" width="19" height="19" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="start"><tspan x="1853" y="57.7932">Data contract</tspan></text>
+<rect x="1980" y="42" width="19" height="19" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="start"><tspan x="2008" y="57.7932">Code checks</tspan></text>
+<rect x="50" y="150" width="2100" height="200" rx="10" fill="#f6f8fb" stroke="#bcc9d6" stroke-width="1.3" stroke-dasharray="7 5"/>
+<text fill="#233449" font-size="22" font-weight="600" text-anchor="start"><tspan x="72" y="186.2912">Loaded once at startup · RuntimeData</tspan></text>
+<rect x="72" y="208" width="660" height="117" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="402" y="241.1928">Foundation · Business knowledge</tspan></text>
+<text fill="#233449" font-size="18" font-weight="400" text-anchor="middle"><tspan x="402" y="278.37280000000004">Brand &amp; six scenario policies; products, services, stores, events, calendar</tspan><tspan x="402" y="305.0128">Client profiles + purchase records</tspan></text>
+<rect x="754" y="208" width="590" height="117" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1049" y="241.1928">Context · Runtime configuration</tspan></text>
+<text fill="#233449" font-size="18" font-weight="400" text-anchor="middle"><tspan x="1049" y="278.37280000000004">loading.json · guardrail.json · polish.json</tspan><tspan x="1049" y="305.0128">Scenario loading table / validation limits / wording patterns</tspan></text>
+<rect x="1366" y="208" width="762" height="117" rx="10" fill="#efeafa" stroke="#afa0cf" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1747" y="241.1928">Prompts · Instructions &amp; examples</tspan></text>
+<text fill="#233449" font-size="18" font-weight="400" text-anchor="middle"><tspan x="1747" y="278.37280000000004">plan.md · write.md · polish.md · writer_examples.json</tspan><tspan x="1747" y="305.0128">Instructions composed per scenario; source files → configuration_hash</tspan></text>
+<rect x="340" y="410" width="1460" height="757" rx="10" fill="#fbfcfd" stroke="#aab8c5" stroke-width="1.3" stroke-dasharray="7 5"/>
+<text fill="#233449" font-size="21" font-weight="600" text-anchor="start"><tspan x="365" y="444.3916">AdvisorWorkflow.generate()   ·   PydanticAI structured outputs + Python orchestration</tspan></text>
+<text fill="#64748b" font-size="17" font-weight="400" text-anchor="start"><tspan x="1120" y="385.7932">Select data, policies and prompts for the current scenario</tspan></text>
+<rect x="50" y="485" width="250" height="620" rx="10" fill="#f7f9fb" stroke="#b4c1ce" stroke-width="1.3" />
+<text fill="#233449" font-size="22" font-weight="600" text-anchor="middle"><tspan x="175" y="530.0112">Structured input</tspan><tspan x="175" y="562.5712">CaseInput</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="start"><tspan x="72" y="625.5732">scenario · case_date</tspan><tspan x="72" y="650.7332"></tspan><tspan x="72" y="675.8932000000001">client_information</tspan><tspan x="72" y="701.0532000000001">Known ID or inline profile</tspan><tspan x="72" y="726.2132"></tspan><tspan x="72" y="751.3732">conversation_history</tspan><tspan x="72" y="776.5332000000001">ID / date / role / message</tspan><tspan x="72" y="801.6932"></tspan><tspan x="72" y="826.8532">product_information</tspan><tspan x="72" y="852.0132000000001">Product IDs / event ID</tspan></text>
+<rect x="70" y="925" width="210" height="100" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="175" y="958.1927999999999">Input validation</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="175" y="987.5536000000001">Types / unique IDs</tspan><tspan x="175" y="1011.2336">Chronology / case date</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="middle"><tspan x="175" y="1056.2344">CLI / HTTP API</tspan><tspan x="175" y="1076.9544">Same workflow for batches</tspan></text>
+<rect x="360" y="465" width="320" height="670" rx="10" fill="#ffffff" stroke="#c2cdd7" stroke-width="1.3" />
+<text fill="#233449" font-size="25" font-weight="600" text-anchor="start"><tspan x="377" y="502.49">01  Prepare</tspan></text>
+<text fill="#64748b" font-size="16" font-weight="400" text-anchor="start"><tspan x="377" y="528.8936">Python · No model call</tspan></text>
+<rect x="725" y="465" width="320" height="670" rx="10" fill="#ffffff" stroke="#c2cdd7" stroke-width="1.3" />
+<text fill="#233449" font-size="25" font-weight="600" text-anchor="start"><tspan x="742" y="502.49">02  Planner</tspan></text>
+<text fill="#64748b" font-size="16" font-weight="400" text-anchor="start"><tspan x="742" y="528.8936">LLM · Planning</tspan></text>
+<rect x="1090" y="465" width="320" height="670" rx="10" fill="#ffffff" stroke="#c2cdd7" stroke-width="1.3" />
+<text fill="#233449" font-size="25" font-weight="600" text-anchor="start"><tspan x="1107" y="502.49">03  Writer</tspan></text>
+<text fill="#64748b" font-size="16" font-weight="400" text-anchor="start"><tspan x="1107" y="528.8936">LLM · Drafting</tspan></text>
+<rect x="1455" y="465" width="320" height="670" rx="10" fill="#ffffff" stroke="#c2cdd7" stroke-width="1.3" />
+<text fill="#233449" font-size="25" font-weight="600" text-anchor="start"><tspan x="1472" y="502.49">04  Polish</tspan></text>
+<text fill="#64748b" font-size="16" font-weight="400" text-anchor="start"><tspan x="1472" y="528.8936">Python + Conditional LLM</tspan></text>
+<rect x="380" y="557" width="280" height="87" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="520" y="590.1927999999999">Select loading rule</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="520" y="624.8936">loading.rule(case.scenario)</tspan></text>
+<rect x="380" y="670" width="280" height="174" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="520" y="703.1927999999999">Select &amp; compute context</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="520" y="745.8736">Products: IDs / events / history</tspan><tspan x="520" y="769.5536">Scenario fields / services / policies</tspan><tspan x="520" y="793.2336">Purchases → spend &amp; client tier</tspan><tspan x="520" y="816.9136">Eligibility / calendar / last contact</tspan></text>
+<rect x="380" y="873" width="280" height="130" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="520" y="906.1927999999999">CasePack</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="520" y="937.6332">Client card + full conversation</tspan><tspan x="520" y="962.7932">Facts: ID, text, internal flag</tspan><tspan x="520" y="987.9532">Product scope + program notes</tspan></text>
+<text fill="#64748b" font-size="16" font-weight="400" text-anchor="middle"><tspan x="520" y="1050.2136">Unknown product / event → notes</tspan><tspan x="520" y="1073.8936">Unknown client needs an inline name</tspan><tspan x="520" y="1097.5736">Internal facts inform judgement only</tspan></text>
+<rect x="745" y="557" width="280" height="100" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="885" y="590.1927999999999">Planner input &amp; instructions</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="885" y="619.5536000000001">Client card, full history &amp; facts</tspan><tspan x="885" y="643.2336">plan.md + brand / scenario rules</tspan></text>
+<rect x="745" y="683" width="280" height="75" rx="10" fill="#efeafa" stroke="#afa0cf" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="885" y="716.1927999999999">Planner · One LLM call</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="885" y="744.8936">Identify asks, facts &amp; reply angles</tspan></text>
+<rect x="745" y="784" width="280" height="164" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="885" y="817.1927999999999">Plan</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="885" y="854.8736">client_asks + shared fact_ids</tspan><tspan x="885" y="878.5536">3 angles: name, point, purpose,</tspan><tspan x="885" y="902.2336">message_ids, next_step</tspan><tspan x="885" y="925.9136">situation, sub_type, avoid, missing</tspan></text>
+<rect x="745" y="974" width="280" height="98" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="885" y="1007.1927999999999">Plan checks</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="885" y="1035.5536">Valid IDs / non-internal / ≤8 facts</tspan><tspan x="885" y="1059.2336">Subtype / grounding / unique names</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="middle"><tspan x="885" y="1106.0944000000002">Retry ≤1; then sanitize citations + warn</tspan></text>
+<rect x="1110" y="557" width="280" height="100" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1250" y="590.1927999999999">Writer input &amp; instructions</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="1250" y="619.5536000000001">Shared facts + full history + plan</tspan><tspan x="1250" y="643.2336">write.md + brand / rules + example</tspan></text>
+<rect x="1110" y="683" width="280" height="75" rx="10" fill="#efeafa" stroke="#afa0cf" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1250" y="716.1927999999999">Writer · One LLM call</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="1250" y="744.8936">Draft three replies in one response</tspan></text>
+<rect x="1110" y="784" width="280" height="110" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1250" y="817.1927999999999">Drafts ×3</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="1250" y="851.2132">Each: angle, text, fact_ids</tspan><tspan x="1250" y="876.3732">Shared facts; distinct strategies</tspan></text>
+<rect x="1110" y="920" width="280" height="152" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1250" y="953.1927999999999">Draft checks</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="1250" y="984.8736">Cited IDs within the shared pool</tspan><tspan x="1250" y="1008.5536">Prices / dates / times / products</tspan><tspan x="1250" y="1032.2336">Banned / internal terms; salutation</tspan><tspan x="1250" y="1055.9136">Chinese text / ≤200 characters</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="middle"><tspan x="1250" y="1106.0944000000002">Retry ≤1; then return drafts + warnings</tspan></text>
+<rect x="1475" y="557" width="280" height="87" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1615" y="590.1927999999999">Scan wording patterns</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="1615" y="625.2932">Reassurance / defensive wording</tspan></text>
+<polygon points="1615,665 1690,700 1615,735 1540,700" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3"/>
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1615" y="706.6927999999999">Flagged?</tspan></text>
+<rect x="1475" y="770" width="280" height="83" rx="10" fill="#efeafa" stroke="#afa0cf" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1615" y="803.1927999999999">Polisher · Optional LLM call</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="1615" y="835.8936">Flagged text, messages, salutation</tspan></text>
+<rect x="1475" y="880" width="280" height="100" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1615" y="913.1927999999999">Rewrite checks</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="1615" y="942.5536000000001">No added length, values or products</tspan><tspan x="1615" y="966.2336">Keep salutation; remove patterns</tspan></text>
+<rect x="1475" y="1000" width="280" height="78" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1615" y="1033.1928">Return final drafts</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="1615" y="1063.3936">Splice valid edits; keep other text</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="middle"><tspan x="1615" y="1108.5944000000002">Retry ≤1; keep original if rewrite fails</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="start"><tspan x="1628" y="755.5944">Yes</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="middle"><tspan x="1730.5" y="687.0944">No</tspan></text>
+<rect x="1850" y="485" width="300" height="620" rx="10" fill="#f7f9fb" stroke="#b4c1ce" stroke-width="1.3" />
+<text fill="#233449" font-size="22" font-weight="600" text-anchor="middle"><tspan x="2000" y="530.0112">Final output</tspan><tspan x="2000" y="562.5712">GenerationResult</tspan></text>
+<rect x="1870" y="596" width="260" height="103" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="2000" y="629.1927999999999">Soft warnings</tspan></text>
+<text fill="#233449" font-size="16" font-weight="400" text-anchor="middle"><tspan x="2000" y="660.0536000000001">Exclamation / discount mentions</tspan><tspan x="2000" y="683.7336">Draft-to-draft wording similarity</tspan></text>
+<rect x="1870" y="735" width="260" height="155" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="2000" y="768.1927999999999">Three replies + audit trail</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="2000" y="812.1332">pack · plan · drafts · edits</tspan><tspan x="2000" y="837.2932">warnings · usage · trace</tspan><tspan x="2000" y="862.4532">Version / config hash / time</tspan></text>
+<rect x="1870" y="955" width="260" height="103" rx="10" fill="#eaf3f8" stroke="#9ab7cc" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="2000" y="988.1927999999999">Advisor reviews &amp; selects</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="2000" y="1018.7132">Choose / edit a reply to send</tspan><tspan x="2000" y="1043.8732">No automated client messaging</tspan></text>
+<text fill="#64748b" font-size="15" font-weight="400" text-anchor="middle"><tspan x="1076" y="1155.9940000000001">Horizontal arrows show stage handoffs; steps run top to bottom within each stage. Dashed loops = bounded retries with feedback.</tspan></text>
+<rect x="50" y="1210" width="670" height="100" rx="10" fill="#fff6df" stroke="#d8be7b" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="385" y="1243.1928">Context boundary · Writer receives a selected subset</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="385" y="1272.2132">Writer receives the planned shared facts, full history and necessary context.</tspan><tspan x="385" y="1297.3732">The full client profile and all CasePack facts are not forwarded.</tspan></text>
+<rect x="765" y="1210" width="670" height="100" rx="10" fill="#efeafa" stroke="#afa0cf" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1100" y="1243.1928">Execution · Fixed workflow, no tool loop</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="1100" y="1272.2132">Two model calls normally; three when wording polish is triggered.</tspan><tspan x="1100" y="1297.3732">At most one retry per model stage; schema or provider errors can stop the run.</tspan></text>
+<rect x="1480" y="1210" width="670" height="100" rx="10" fill="#eaf3eb" stroke="#9bb79e" stroke-width="1.3" />
+<text fill="#233449" font-size="18" font-weight="600" text-anchor="middle"><tspan x="1815" y="1243.1928">Traceability · Evidence, edits and checks stay visible</tspan></text>
+<text fill="#233449" font-size="17" font-weight="400" text-anchor="middle"><tspan x="1815" y="1272.2132">CLI / batch exports JSON / CSV; HTTP returns the result.</tspan><tspan x="1815" y="1297.3732">Code checks cannot guarantee meaning; the advisor still reviews.</tspan></text>
+<text fill="#64748b" font-size="14" font-weight="400" text-anchor="start"><tspan x="52" y="1339.5944000000002">Local v0.2.3 implementation · 2026-11-08   |   Runtime workflow only; evaluation and UI layouts excluded   |   Limits reflect current configuration</tspan></text><path d="M 1100 350 L 1100 410" fill="none" stroke="#7b8c9f" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M 520 644 L 520 670" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 520 844 L 520 873" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 885 657 L 885 683" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 885 758 L 885 784" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 885 948 L 885 974" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 745 1020 L 735 1020 L 735 719 L 745 719" fill="none" stroke="#a28051" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M 1250 657 L 1250 683" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1250 758 L 1250 784" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1250 894 L 1250 920" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1110 995 L 1100 995 L 1100 719 L 1110 719" fill="none" stroke="#a28051" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M 1615 644 L 1615 665" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1615 735 L 1615 770" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1615 853 L 1615 880" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1615 980 L 1615 1000" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1690 700 L 1765 700 L 1765 1039 L 1755 1039" fill="none" stroke="#92a197" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1475 924 L 1465 924 L 1465 810 L 1475 810" fill="none" stroke="#a28051" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M 2000 699 L 2000 735" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 2000 890 L 2000 955" fill="none" stroke="#7b8c9f" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 300 746 L 360 746" fill="none" stroke="#536e85" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 680 746 L 725 746" fill="none" stroke="#536e85" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1045 746 L 1090 746" fill="none" stroke="#536e85" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1410 746 L 1455 746" fill="none" stroke="#536e85" stroke-width="1.8"  marker-end="url(#arrow)"/>
+<path d="M 1775 746 L 1850 746" fill="none" stroke="#536e85" stroke-width="1.8"  marker-end="url(#arrow)"/></g></svg>
