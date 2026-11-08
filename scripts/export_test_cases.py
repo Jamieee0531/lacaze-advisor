@@ -5,9 +5,10 @@ Usage:
         artifacts/development-v0.2.3-final artifacts/test-v0.2.3-final \
         --out deliverables/C_test_cases.xlsx
 
-Each run directory holds one Cxx.json per case. Inputs are shown as the tool saw them
-after preparation: the client card and purchases from store records, and the product and
-event facts loaded for the scenario. Facts marked internal are for the advisor only.
+Each run directory holds one Cxx.json per case. The input columns show the case input as
+given to the tool: a client ID (or name and salutation for a new client), the conversation,
+and product or event IDs. Names in brackets are looked up from data/foundation for reading
+only; everything else the tool retrieves during preparation is not shown here.
 """
 
 from __future__ import annotations
@@ -15,7 +16,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -24,84 +24,66 @@ from openpyxl.styles import Alignment, Font, PatternFill
 COLUMNS = [
     ("Case ID", 9),
     ("Scenario", 30),
-    ("Client information", 40),
+    ("Client information", 26),
     ("Conversation history", 60),
-    ("Product information", 64),
+    ("Product information", 40),
     ("Output 1", 42),
     ("Output 2", 42),
     ("Output 3", 42),
 ]
 ROLES = {"client": "客户", "advisor": "顾问"}
+GENDERS = {"male": "男", "female": "女"}
 LINE_POINTS = 15
 MAX_ROW_POINTS = 409  # Excel's limit
-PURCHASE = re.compile(r"购买记录：(\d+)年(\d+)月(\d+)日购入 (.+?)，距今 \d+ 天")
+FOUNDATION = Path(__file__).resolve().parents[1] / "data" / "foundation"
 
 
-def client_information(pack: dict) -> str:
-    c = pack["client"]
+def names(path: str, key: str) -> dict[str, str]:
+    rows = json.loads((FOUNDATION / path).read_text(encoding="utf-8"))
+    return {r[key]: r["name"] for r in rows}
+
+
+CLIENTS = names("clients/clients.json", "client_id")
+PRODUCTS = names("brand/products.json", "product_id")
+EVENTS = names("brand/events.json", "event_id")
+
+
+def client_information(client: dict) -> str:
+    if client["client_id"]:
+        return f"client_id：{client['client_id']}\n姓名：{CLIENTS[client['client_id']]}"
     rows = [
-        ("姓名", c["name"]),
-        ("称呼", c["salutation"]),
-        ("层级", c["tier"]),
-        ("成为客户", c["client_since"]),
-        ("累计消费", f"{c['cumulative_spend_cny']:,} 元" if c["cumulative_spend_cny"] else None),
-        ("生日", c["birthday"]),
+        ("姓名", client["name"]),
+        ("称呼", client["salutation"]),
+        ("性别", GENDERS.get(client["gender"], client["gender"])),
     ]
-    lines = [f"{k}：{v}" for k, v in rows if v]
-    if not c["purchases_known"]:
-        lines.append("新客户，无门店购买记录")
-    purchases = [purchase(f["text"]) for f in pack["facts"] if f["kind"] == "purchase"]
-    if purchases:
-        lines.append("购买记录：" + "；".join(purchases))
-    return "\n".join(lines)
+    return "\n".join(["新客户，无 client_id", *(f"{k}：{v}" for k, v in rows if v)])
 
 
-def purchase(text: str) -> str:
-    """'购买记录：2024年12月14日购入 Margaux 翻盖包（黑色），距今 692 天' -> '2024-12-14 Margaux 翻盖包（黑色）'"""
-    match = PURCHASE.fullmatch(text)
-    if not match:
-        return text
-    year, month, day, item = match.groups()
-    return f"{year}-{int(month):02d}-{int(day):02d} {item}"
-
-
-def conversation_history(pack: dict) -> str:
-    lines = [f"（当天日期：{pack['case_date']}）"]
-    if not pack["history"]:
+def conversation_history(case: dict) -> str:
+    lines = [f"（当天日期：{case['case_date']}）"]
+    history = case["conversation_history"]
+    if not history:
         return "\n".join([*lines, "无对话历史"])
-    lines += [f"{m['date']} {ROLES[m['role']]}：{m['text']}" for m in pack["history"]]
+    lines += [f"{m['date']} {ROLES[m['role']]}：{m['text']}" for m in history]
     return "\n".join(lines)
 
 
-def product_information(pack: dict) -> str:
-    facts = [f for f in pack["facts"] if f["kind"] in ("product", "event")]
-    if not facts:
-        return "不适用"
-    groups: dict[str, list[dict]] = {}
-    for fact in facts:
-        groups.setdefault(fact["fact_id"].split(".")[0], []).append(fact)
-    return "\n".join(product_paragraph(group) for group in groups.values())
+def product_information(product: dict) -> str:
+    lines = [f"product_id：{p}（{PRODUCTS[p]}）" for p in product["product_ids"]]
+    if product["event_id"]:
+        lines.append(f"event_id：{product['event_id']}（{EVENTS[product['event_id']]}）")
+    return "\n".join(lines) or "不适用"
 
 
-def product_paragraph(facts: list[dict]) -> str:
-    """One product or event per paragraph; later facts drop the repeated product name."""
-    name = facts[0]["text"].split(" ")[0] + " "
-    parts = []
-    for i, fact in enumerate(facts):
-        text = (fact["text"] if i == 0 else fact["text"].removeprefix(name)).rstrip("。")
-        parts.append(text + ("（内部）" if fact["internal"] and "内部" not in text else ""))
-    return "；".join(parts)
-
-
-def row(result: dict) -> list[str]:
-    pack = result["pack"]
+def row(record: dict) -> list[str]:
+    case = record["input"]
     return [
-        result["case_id"],
-        result["scenario"],
-        client_information(pack),
-        conversation_history(pack),
-        product_information(pack),
-        *result["candidates"]["messages"],
+        case["case_id"],
+        case["scenario"],
+        client_information(case["client_information"]),
+        conversation_history(case),
+        product_information(case["product_information"]),
+        *record["result"]["candidates"]["messages"],
     ]
 
 
@@ -126,8 +108,8 @@ def load(run_dirs: list[Path]) -> list[dict]:
             record = json.loads(path.read_text(encoding="utf-8"))
             if record["status"] != "success":
                 raise SystemExit(f"{path} did not succeed; rerun it before exporting")
-            results.append(record["result"])
-    return sorted(results, key=lambda r: int(r["case_id"][1:]))
+            results.append(record)
+    return sorted(results, key=lambda r: int(r["input"]["case_id"][1:]))
 
 
 def write(results: list[dict], out: Path) -> None:
