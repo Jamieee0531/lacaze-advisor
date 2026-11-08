@@ -18,16 +18,7 @@ Scenario: *Birthday and festive greetings*. The client registered recently and h
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A[Case input] --> B[Prepare<br/>code]
-    B --> C[Planner<br/>model]
-    C --> D[Writer<br/>model]
-    D --> E[Polish<br/>code + model]
-    E --> F[Three drafts]
-    B -. facts with IDs .-> C
-    C -. chosen fact IDs .-> D
-```
+![LACAZE Advisor architecture](assets/architecture.png)
 
 1. **Prepare** (code, no model). A loading table decides, per scenario, which facts the case needs: products, services, policies, events, calendar, purchases. Every fact gets an ID. Client tier, eligibility and dates are computed, not asked of a model.
 2. **Planner** (one call). Reads the client, the history and the facts. Lists what the client asked, which facts apply, what to avoid, and three different angles. Code checks that every cited ID exists.
