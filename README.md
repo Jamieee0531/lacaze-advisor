@@ -15,17 +15,23 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 ## Example
 
-Scenario: *Price objection*. A recent graduate, interested in the Colette (CNY 35,000) as her first LACAZE bag, writes:
+Scenario: *Price objection*. A recent graduate is choosing her first LACAZE bag.
 
-> 你们有新客优惠或者学生价吗？我刚毕业没多久哈哈。
+> **Client** · 想买第一只你们家的包，平时出门东西不多。<br>
+> **Advisor** · 许小姐，可以看看 Colette，3.5 万元，放手机、卡包、钥匙都合适。<br>
+> **Client** · 挺喜欢的，不过对我来说有点贵。<br>
+> **Client** · 你们有新客优惠或者学生价吗？我刚毕业没多久哈哈。
 
-The brand does not discount, and the advisor must say so without sounding scripted or pushing. Three candidates, each with a different angle:
+The brand does not discount, and the advisor must say so without sounding scripted or pushing. The tool returns three candidates, each from a different angle:
 
-| Angle | Message |
-|---|---|
-| 直答政策 | 许小姐，直接回答您：针对新客或学生的特别价格，我们都没有。LACAZE 全国官方门店统一定价，不打折、不议价，也没有会员折扣，Colette 是 35,000 元。有什么想了解的随时问我。 |
-| 先接预算 | 许小姐，刚毕业，对价格多掂量一下很正常。新客和学生的专属价格我们确实没有，全国门店都是统一定价，不打折。您说平时出门东西不多，Colette 能放下手机（6.7 英寸以内）、卡包、钥匙和口红，您可以对照自己的日常看看合不合适。 |
-| 讲清所含 | 许小姐，新客和学生的专属价格都没有，我们不打折也不议价。不过在官方门店购买的手袋，每年可以免费做一次基础护理，内侧皮标也可以免费烫印最多三个首字母。Colette 用的是小羊皮，链条是手工逐节打磨的。您想再考虑也完全可以，若想先看看实物、试背，到时跟我约时间就好。 |
+**1 · State the policy plainly**
+> 许小姐，直接回答您：针对新客或学生的特别价格，我们都没有。LACAZE 全国官方门店统一定价，不打折、不议价，也没有会员折扣，Colette 是 35,000 元。有什么想了解的随时问我。
+
+**2 · Acknowledge the budget first**
+> 许小姐，刚毕业，对价格多掂量一下很正常。新客和学生的专属价格我们确实没有，全国门店都是统一定价，不打折。您说平时出门东西不多，Colette 能放下手机（6.7 英寸以内）、卡包、钥匙和口红，您可以对照自己的日常看看合不合适。
+
+**3 · Explain what the price includes**
+> 许小姐，新客和学生的专属价格都没有，我们不打折也不议价。不过在官方门店购买的手袋，每年可以免费做一次基础护理，内侧皮标也可以免费烫印最多三个首字母。Colette 用的是小羊皮，链条是手工逐节打磨的。您想再考虑也完全可以，若想先看看实物、试背，到时跟我约时间就好。
 
 ## How it works
 
