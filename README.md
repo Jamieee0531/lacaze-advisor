@@ -1,6 +1,13 @@
-# LACAZE Advisor
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/lacaze-logo-white.svg">
+    <img src="assets/lacaze-logo.svg" alt="LACAZE" width="280">
+  </picture>
+  <br>
+  Advisor
+</h1>
 
-Drafts three WeChat messages for a luxury Client Advisor, grounded in what the store actually knows about the client and the product.
+<p align="center">Drafts three WeChat messages for a luxury Client Advisor, grounded in what the store actually knows about the client and the product.</p>
 
 Given a client, the conversation so far and a scenario, it returns three candidate messages in Chinese, each taking a different angle. The advisor picks one, edits it and sends it. Nothing is sent automatically.
 
