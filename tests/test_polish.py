@@ -97,3 +97,13 @@ async def test_repolish_applies_the_stage_to_an_earlier_result(data, cases):
     assert again.candidates.messages == result.candidates.messages
     assert len(again.edits) == 3 and len(again.usage) == len(result.usage) + 1
     assert again.pack == result.pack and again.plan == result.plan
+
+
+def test_defensive_variants_seen_after_shared_facts_are_flagged(data):
+    variants = [
+        "各隔层的具体内部尺寸我这里没有，要看实物才准。",
+        "酒红是不是 dressy，我不好替您下结论，看实物会更准。",
+        "是否合她喜欢的浅色，我这里没法替您判断，看实物会更直观。",
+    ]
+    flags = find_flags([draft(t, angle=i) for i, t in enumerate(variants, 1)], data.polish)
+    assert [f.kinds for f in flags] == [["defensive"]] * 3
