@@ -52,7 +52,7 @@ function renderInput() {
     `<div class="case-field"><div class="source-heading"><label for="case-select">输入来源</label>${modified}</div><select id="case-select"><option value="__blank" ${state.isNew ? 'selected' : ''}>空白输入 · 从头填写</option><optgroup label="现有案例">${caseOptions}</optgroup></select></div>`
     + `<div class="field-grid"><label class="full">业务日期<input type="date" data-field="case_date" value="${h(c.case_date)}" min="${h(range?.min)}" max="${h(range?.max)}" required aria-describedby="date-error">${errorSlot('date')}</label><label class="full">场景<select data-field="scenario">${Object.entries(scenarios).map(([id, label]) => `<option value="${h(id)}" ${c.scenario === id ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label></div>`
     + `<section class="input-section"><div class="section-heading"><h3>客户信息</h3>${btn(`查看档案 ${icon('ArrowUpRight')}`, 'client')}</div><label class="sr-only" for="client-select">选择客户</label><select id="client-select" aria-describedby="client-error"><option value="__new" ${!record ? 'selected' : ''}>新客户 · 填写客户信息</option>${clientOptions}</select>${errorSlot('client')}${clientBlock}</section>`
-    + `<section class="input-section" id="history-section"><div class="section-heading"><h3>对话历史 <span class="history-count">${history.length} 条</span></h3>${history.length ? btn('编辑', 'edit-history') : ''}</div>${recent}<div class="history-actions">${btn(`${icon('Plus')} 添加对话`, 'add-history', '', 'history-add')}${history.length ? btn('查看全部', 'history') : ''}</div>${errorSlot('history')}</section>`
+    + `<section class="input-section" id="history-section"><div class="section-heading"><h3>对话历史 <span class="history-count">${history.length} 条</span></h3></div>${recent}<div class="history-actions">${btn(history.length ? '编辑对话' : `${icon('Plus')} 添加对话`, 'edit-history', '', 'history-add')}${history.length ? btn('查看全部', 'history') : ''}</div>${errorSlot('history')}</section>`
     + productSection(record, purchases) + errorSlot('general');
   renderValidation();
 }
@@ -71,9 +71,12 @@ function productSection(record, purchases) {
   const choices = care && record ? f.products.filter(p => owned.has(p.product_id) || selected.has(p.product_id)) : f.products;
   let html = '';
   if (need.products !== 'hidden') {
-    const chips = choices.map(p => `<label class="product-chip"><input type="checkbox" data-product="${h(p.product_id)}" ${selected.has(p.product_id) ? 'checked' : ''}>${h(p.name.split(' ')[0])}</label>`).join('');
+    // For care, each bag shows when the client bought it, so the choice reads as "which purchase".
+    const bought = id => purchases.filter(p => p.product_id === id).map(p => p.purchase_date.slice(0, 7).replace('-', '/')).sort().at(-1);
+    const chips = choices.map(p => `<label class="product-chip"><input type="checkbox" data-product="${h(p.product_id)}" ${selected.has(p.product_id) ? 'checked' : ''}>${h(p.name.split(' ')[0])}${care && bought(p.product_id) ? `<span class="chip-note">· ${h(bought(p.product_id))} 购入</span>` : ''}</label>`).join('');
     const empty = care ? (record ? '该客户在业务日期前没有购买记录。' : '请先选择已有客户。') : '';
-    html += `<div class="section-heading"><h3 id="product-heading">${care ? '涉及的已购商品' : '商品信息'}${tag(need.products)}</h3>${btn(`查看资料 ${icon('ArrowUpRight')}`, 'products')}</div><div class="products" id="product-options" role="group" aria-labelledby="product-heading" aria-describedby="products-error">${chips || `<p class="client-meta">${empty}</p>`}</div>${errorSlot('products')}`;
+    const note = care && chips ? '<p class="field-note">只列出该客户买过的商品，勾选这次要关怀的那一款。</p>' : '';
+    html += `<div class="section-heading"><h3 id="product-heading">${care ? '关怀的商品' : '商品信息'}${tag(need.products)}</h3>${btn(`查看资料 ${icon('ArrowUpRight')}`, 'products')}</div><div class="products" id="product-options" role="group" aria-labelledby="product-heading" aria-describedby="products-error">${note}${chips || `<p class="client-meta">${empty}</p>`}</div>${errorSlot('products')}`;
   }
   if (need.event !== 'hidden') {
     const unknown = pi.event_id && !f.events.some(e => e.event_id === pi.event_id);
@@ -408,7 +411,7 @@ function setRun(run) { state.run = run; renderMain(); }
 function focusIssue(field) {
   const target = {
     products: () => document.querySelector('[data-product]'),
-    history: () => document.querySelector('[data-action="edit-history"], [data-action="add-history"]'),
+    history: () => document.querySelector('[data-action="edit-history"]'),
   }[field]?.() || fieldTarget[field]?.() || document.querySelector(`[data-field="${field}"]`);
   target?.focus();
   target?.scrollIntoView?.({ block: 'nearest' });
@@ -482,7 +485,6 @@ const actions = {
   process: showProcess,
   input: showInput,
   history: showHistory,
-  'add-history': () => editHistory(true),
   'edit-history': () => editHistory(),
   client: showClient,
   products: () => showLibrary('商品信息'),

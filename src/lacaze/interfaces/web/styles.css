@@ -265,3 +265,5 @@ label input,label select,label textarea {margin-top:7px; color:var(--ink)}
 .input-sheet[inert] .sheet-scroll {opacity:.6}
 #generate:disabled {opacity:.7}
 .skeleton.planning {min-height:96px; border:0; border-left:2px solid #e4ddd3; border-radius:0; padding:4px 0 0 15px}
+.chip-note {color:var(--faint); font-size:11px}
+.field-note {flex-basis:100%; font-size:11px; line-height:1.7; color:var(--secondary); margin:-4px 0 4px}
