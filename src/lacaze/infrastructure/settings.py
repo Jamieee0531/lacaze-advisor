@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     allowed_hosts: str = Field(default="", validation_alias="LACAZE_ALLOWED_HOSTS")
     render_hostname: str | None = Field(default=None, validation_alias="RENDER_EXTERNAL_HOSTNAME")
     access_code: SecretStr | None = Field(default=None, validation_alias="LACAZE_ACCESS_CODE")
+    daily_generation_limit: int | None = Field(
+        default=None, gt=0, validation_alias="LACAZE_DAILY_GENERATION_LIMIT"
+    )
 
     @property
     def hosts(self) -> list[str]:

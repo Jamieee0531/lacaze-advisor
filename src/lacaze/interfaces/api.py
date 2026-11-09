@@ -21,6 +21,7 @@ from lacaze.interfaces.demo import (
     require_same_origin,
     stream_generation,
 )
+from lacaze.interfaces.quota import DailyQuota
 
 WEB_DIR = Path(__file__).with_name("web")
 
@@ -49,6 +50,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
                 await client.close()
 
     settings = Settings()
+    quota = DailyQuota(settings.daily_generation_limit)
     app = FastAPI(title="LACAZE Advisor", version=__version__, lifespan=lifespan)
     if settings.access_code:
         app.add_middleware(AccessCodeMiddleware, code=settings.access_code.get_secret_value())
@@ -79,7 +81,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
                 status_code=422, detail="无法找到客户。请选择已有客户，或填写新客户姓名。"
             ) from None
 
-    @app.post("/generate/stream", dependencies=[Depends(require_same_origin)])
+    @app.post("/generate/stream", dependencies=[Depends(require_same_origin), Depends(quota)])
     async def generate_stream(case: CaseInput) -> StreamingResponse:
         return GenerationStreamResponse(stream_generation(app.state.workflow, case))
 
@@ -92,7 +94,9 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
         return [s.value for s in Scenario]
 
     @app.post(
-        "/generate", response_model=GenerationResult, dependencies=[Depends(require_same_origin)]
+        "/generate",
+        response_model=GenerationResult,
+        dependencies=[Depends(require_same_origin), Depends(quota)],
     )
     async def generate(case: CaseInput) -> GenerationResult:
         try:

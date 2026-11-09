@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from lacaze.application.workflow import AdvisorWorkflow
@@ -44,3 +45,40 @@ def test_access_code_guards_every_page_but_health(data, monkeypatch):
         assert client.get("/scenarios", auth=("advisor", "wrong")).status_code == 401
         assert client.get("/scenarios", auth=("advisor", "s3cret")).status_code == 200
         assert client.get("/health").status_code == 200
+
+
+def test_daily_limit_caps_billable_generations(data, cases, monkeypatch):
+    monkeypatch.setenv("LACAZE_DAILY_GENERATION_LIMIT", "2")
+    payload = cases[0].model_dump(mode="json")
+    with client_for(data) as client:
+        assert client.post("/generate", json=payload).status_code == 200
+        assert client.post("/generate/stream", json=payload).status_code == 200
+        refused = client.post("/generate", json=payload)
+        assert refused.status_code == 429
+        assert "今日" in refused.json()["detail"]
+        assert client.post("/demo/prepare", json=payload).status_code == 200
+
+
+def test_daily_limit_resets_on_a_new_day():
+    from datetime import date
+
+    from fastapi import HTTPException
+
+    from lacaze.interfaces.quota import DailyQuota
+
+    day = [date(2026, 11, 9)]
+    quota = DailyQuota(1, today=lambda: day[0])
+    quota()
+    with pytest.raises(HTTPException) as refused:
+        quota()
+    assert refused.value.status_code == 429
+    day[0] = date(2026, 11, 10)
+    quota()
+
+
+def test_no_daily_limit_by_default(data, cases, monkeypatch):
+    monkeypatch.delenv("LACAZE_DAILY_GENERATION_LIMIT", raising=False)
+    payload = cases[0].model_dump(mode="json")
+    with client_for(data) as client:
+        for _ in range(3):
+            assert client.post("/generate", json=payload).status_code == 200

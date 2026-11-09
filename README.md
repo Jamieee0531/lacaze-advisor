@@ -102,7 +102,7 @@ uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 
 ### Hosting
 
-`render.yaml` deploys the app to Render. Enter `ANTHROPIC_API_KEY` and `LACAZE_ACCESS_CODE` in the Render dashboard; the browser then asks for the access code (any user name) before any page or generation. Render's own host name is allowed automatically; other host names go in `LACAZE_ALLOWED_HOSTS`.
+`render.yaml` deploys the app to Render; enter `ANTHROPIC_API_KEY` in the Render dashboard. `LACAZE_DAILY_GENERATION_LIMIT` caps generations per UTC day (100 in `render.yaml`), and a spending limit on the API key is the backstop. Setting `LACAZE_ACCESS_CODE` puts every page behind the browser's sign-in prompt (any user name, the code as password). Render's own host name is allowed automatically; other host names go in `LACAZE_ALLOWED_HOSTS`.
 
 ## Evaluation
 
