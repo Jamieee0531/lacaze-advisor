@@ -14,6 +14,7 @@ from lacaze.domain.result import GenerationResult
 from lacaze.infrastructure.data import RuntimeData, load_cases
 from lacaze.infrastructure.provider import create_model
 from lacaze.infrastructure.settings import Settings
+from lacaze.interfaces.access import AccessCodeMiddleware
 from lacaze.interfaces.demo import (
     GenerationStreamResponse,
     foundation_payload,
@@ -47,8 +48,11 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
             if client:
                 await client.close()
 
+    settings = Settings()
     app = FastAPI(title="LACAZE Advisor", version=__version__, lifespan=lifespan)
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
+    if settings.access_code:
+        app.add_middleware(AccessCodeMiddleware, code=settings.access_code.get_secret_value())
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.hosts)
     app.mount("/web", StaticFiles(directory=WEB_DIR, check_dir=False), name="web")
 
     @app.get("/", include_in_schema=False)

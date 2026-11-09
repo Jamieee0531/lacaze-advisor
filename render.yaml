@@ -1,0 +1,20 @@
+# Render Blueprint for the hosted demo. Secrets are entered in the Render dashboard, never here.
+services:
+  - type: web
+    name: lacaze-advisor
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install uv && uv sync --locked --no-dev
+    # Proxy headers let same-origin checks see the public https scheme.
+    startCommand: uv run --no-sync uvicorn lacaze.interfaces.api:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.13
+      - key: LACAZE_MODEL
+        value: claude-sonnet-5-5
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: LACAZE_ACCESS_CODE
+        sync: false

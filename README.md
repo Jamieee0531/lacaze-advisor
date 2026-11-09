@@ -100,6 +100,10 @@ uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 
 `POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema. Intended for local use.
 
+### Hosting
+
+`render.yaml` deploys the app to Render. Enter `ANTHROPIC_API_KEY` and `LACAZE_ACCESS_CODE` in the Render dashboard; the browser then asks for the access code (any user name) before any page or generation. Render's own host name is allowed automatically; other host names go in `LACAZE_ALLOWED_HOSTS`.
+
 ## Evaluation
 
 `lacaze evaluate` scores existing runs against a rubric; it never regenerates messages.

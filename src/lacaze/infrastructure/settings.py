@@ -22,3 +22,12 @@ class Settings(BaseSettings):
     request_timeout_seconds: float = Field(
         default=180, gt=0, validation_alias="LACAZE_REQUEST_TIMEOUT_SECONDS"
     )
+    # Hosting: extra host names (comma-separated) and an optional access code for the demo.
+    allowed_hosts: str = Field(default="", validation_alias="LACAZE_ALLOWED_HOSTS")
+    render_hostname: str | None = Field(default=None, validation_alias="RENDER_EXTERNAL_HOSTNAME")
+    access_code: SecretStr | None = Field(default=None, validation_alias="LACAZE_ACCESS_CODE")
+
+    @property
+    def hosts(self) -> list[str]:
+        extra = [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
+        return ["localhost", "127.0.0.1", *extra, *filter(None, [self.render_hostname])]
