@@ -13,6 +13,12 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 > LACAZE is a fictional brand. All clients, products, services and events in this repository are invented.
 
+## Demo
+
+[![The workbench generating three drafts for case C05](assets/demo-preview.gif)](assets/demo.mp4)
+
+[Watch the 80-second walkthrough](assets/demo.mp4) (English subtitles). An after-sales case is generated, then each stage is opened in turn: the facts Prepare loaded, the Planner's asks and angles, the Writer's drafts and the one sentence Polish rewrote.
+
 ## Example
 
 Scenario: *Price objection*. A recent graduate is choosing her first LACAZE bag.
