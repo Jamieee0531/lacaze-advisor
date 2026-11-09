@@ -7,7 +7,7 @@ import {
   purchasesOf, responseError, scenarios, submissionIssues, validateInput,
 } from './model.mjs';
 import {
-  btn, clientProfileView, dataView, errorSlot, factsView, fmtDate, h, icon, libraryTabs, muted, packView,
+  btn, clientProfileView, dataView, errorSlot, factsView, fmtDate, h, icon, libraryTabs, list, muted, packView,
   planView, polishView, raw, section,
 } from './views.mjs';
 
@@ -21,6 +21,7 @@ const today = () => {
 const state = {
   boot: null, sourceId: null, input: null, isNew: false, dirty: false, stale: false,
   validationAttempted: false, touched: new Set(), tab: 0, editHistory: null, run: null, controller: null,
+  view: null, // after a run: the stage shown in the workspace instead of the three drafts
 };
 const foundation = () => state.boot.foundation;
 const running = () => state.run?.status === 'running';
@@ -123,7 +124,8 @@ function renderPipeline() {
   $('pipeline').innerHTML = STAGES.map((key, i) => {
     const [name, desc] = stageNames[key], [status, label] = stageStatus(key);
     const mark = { completed: icon('Check'), skipped: icon('Minus'), error: icon('X') }[status] || i + 1;
-    return `<button class="step ${status}" data-action="stage" data-stage="${key}" aria-label="${h(`${name}，${desc}，${label}`)}"><span class="step-title"><span class="step-number">${mark}</span>${name}</span><span class="step-status">${label}</span></button>`;
+    const selected = result() && state.view === key ? ' selected' : '';
+    return `<button class="step ${status}${selected}" data-action="stage" data-stage="${key}" aria-pressed="${Boolean(selected)}" aria-label="${h(`${name}，${desc}，${label}`)}"><span class="step-title"><span class="step-number">${mark}</span>${name}</span><span class="step-status">${label}</span></button>`;
   }).join('');
 }
 
@@ -185,13 +187,46 @@ function renderComplete() {
       : `${h(r.model)} · 用时 ${seconds} 秒`}</span></p>`;
 }
 
+/** Body of one finished stage, shown in the workspace when its pipeline step is selected. */
+function stageViewBody(key) {
+  const stage = state.run.stages[key], r = result();
+  if (key === 'prepare') {
+    const pack = stage.output;
+    return `<p class="stage-summary">${h(pack.client.salutation || pack.client.name)} · ${pack.history.length} 条对话 · ${pack.product_ids.length} 款商品 · ${pack.facts.length} 条事实</p>${factsView(pack.facts)}`;
+  }
+  if (key === 'planner') {
+    const plan = stage.output;
+    return `<section class="asks"><h4>本次需要回应</h4><div class="ask-items">${plan.client_asks.length ? plan.client_asks.map(a => `<span class="ask-item">${icon('Check')}${h(a)}</span>`).join('') : '按本次场景与对话时机回应'}</div></section>`
+      + `<div class="running-angles">${plan.angles.map((a, i) => `<section class="angle-column"><h4>${i + 1}. ${h(a.name)}</h4><p>${h(a.point)}</p></section>`).join('')}</div>`
+      + section('客户当前状态', `<p class="body-copy">${h(plan.situation)}</p>`)
+      + section('需要避免', plan.avoid.length ? list(plan.avoid) : muted('无'));
+  }
+  if (key === 'writer') {
+    const drafts = stage.output?.drafts || [];
+    return `<p class="stage-summary">Writer 写出的初稿，修整之前。</p><div class="reply-grid">${drafts.map(d => `<article class="reply"><header class="reply-header"><span class="reply-number">${String(d.angle).padStart(2, '0')}</span><h3 class="reply-title">${h(r.plan.angles[d.angle - 1]?.name || '')}</h3></header><p class="reply-text">${h(d.text)}</p></article>`).join('')}</div>`;
+  }
+  return polishView(stage, r);
+}
+
+function renderStageView(key) {
+  const stage = state.run.stages[key], [name, desc] = stageNames[key];
+  const usage = stage.usage ? ` · 用时 ${Math.round(stage.usage.duration_seconds)} 秒` : '';
+  const retried = stage.retries ? ` · 首次未通过检查，重新生成 ${stage.retries} 次` : '';
+  const status = stage.status === 'skipped' ? '未命中修整规则，无需修整' : `已完成${usage}${retried}`;
+  return `<header class="content-heading"><div><h2>${h(name)} · ${h(desc)}</h2><p>${h(status)}</p></div><div class="stage-view-actions">${btn(`查看完整数据 ${icon('ArrowUpRight')}`, 'stage-data', `data-stage="${key}"`)}${btn(`${icon('ArrowLeft')} 返回三条候选消息`, 'drafts')}</div></header>`
+    + `<div class="stage-view">${stageViewBody(key)}</div>`;
+}
+
 function renderMain() {
   const c = state.input;
   const label = state.isNew ? '新建沟通' : state.dirty ? `基于 ${h(state.sourceId)} · 已修改` : h(c.case_id);
   $('case-stamp').innerHTML = `<strong>${label}</strong><span>${h(scenarios[c.scenario] || c.scenario)}</span><span>${h(fmtDate(c.case_date))}</span>`;
   $('notice').innerHTML = state.stale && state.run && !running()
     ? '<div class="alert">输入已修改。下方内容对应修改前的输入，重新生成后更新。</div>' : '';
-  $('workspace-content').innerHTML = !state.run ? renderReady() : result() ? renderComplete() : renderProgress();
+  const content = !state.run ? renderReady()
+    : !result() ? renderProgress()
+      : state.view ? renderStageView(state.view) : renderComplete();
+  $('workspace-content').innerHTML = content;
   $('input-sheet').inert = running();
   const generate = $('generate');
   generate.disabled = running();
@@ -211,7 +246,7 @@ function markDirty() {
 }
 
 function resetTo(input, { sourceId = null, isNew = false } = {}) {
-  Object.assign(state, { input, sourceId, isNew, dirty: isNew, stale: false, run: null, validationAttempted: false });
+  Object.assign(state, { input, sourceId, isNew, dirty: isNew, stale: false, run: null, view: null, validationAttempted: false });
   state.touched.clear();
   render();
 }
@@ -393,6 +428,13 @@ function errorsAt(id, errors) { $(id).textContent = errors.join('\n'); $(id).hid
 
 function setRun(run) { state.run = run; renderMain(); }
 
+/** After a run a pipeline step switches the workspace to that stage; during a run it opens details. */
+function selectStage(key) {
+  if (!result()) { showStage(key); return; }
+  state.view = state.view === key ? null : key;
+  renderMain();
+}
+
 function focusIssue(field) {
   const target = {
     products: () => document.querySelector('[data-product]'),
@@ -410,6 +452,7 @@ async function generate() {
   const input = clone(state.input), controller = new AbortController();
   state.controller = controller;
   state.stale = false;
+  state.view = null;
   setRun(newRun());
   try {
     const response = await fetch('/generate/stream', {
@@ -466,7 +509,9 @@ const actions = {
   library: () => showLibrary(),
   close: closeDialog,
   tab: button => { state.tab = Number(button.dataset.tab); renderTab(); },
-  stage: button => showStage(button.dataset.stage),
+  stage: button => selectStage(button.dataset.stage),
+  'stage-data': button => showStage(button.dataset.stage),
+  drafts: () => { state.view = null; renderMain(); },
   process: showProcess,
   input: showInput,
   history: showHistory,
