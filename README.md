@@ -15,6 +15,8 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 ## Demo
 
+**Try it live: https://lacaze-advisor.onrender.com** (no account needed). Pick one of the 50 test cases and generate: an unedited case replays its scored v0.2.3 run in a few seconds; edit anything, or start from a blank input, and the model runs live. It is a free instance, so the first visit after a quiet spell may take about a minute to wake up.
+
 [![The workbench generating three drafts for case C05](assets/demo-preview.gif)](assets/demo.mp4)
 
 [Watch the 80-second walkthrough](assets/demo.mp4) (English subtitles). An after-sales case is generated, then each stage is opened in turn: the facts Prepare loaded, the Planner's asks and angles, the Writer's drafts and the one sentence Polish rewrote.
@@ -57,6 +59,14 @@ Requires Python 3.13 and [uv](https://docs.astral.sh/uv/).
 ```sh
 uv sync --locked
 cp .env.example .env        # set ANTHROPIC_API_KEY
+uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
+```
+
+Open http://127.0.0.1:8000 for the advisor workbench: pick one of the 50 cases or start from a blank input, edit anything, and watch the four stages run before the three drafts appear. Unedited cases replay their scored v0.2.3 run; anything else calls the model.
+
+From the command line:
+
+```sh
 uv run lacaze validate-data
 uv run lacaze generate --case-id C12
 ```
@@ -104,9 +114,7 @@ Output directories must be new. Each case writes `Cxx.json` (input, plan, drafts
 uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000 for the advisor workbench: pick one of the 50 cases or start from a blank input, edit anything, and watch the four stages run before the three drafts appear.
-
-`POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema. Intended for local use.
+`POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema.
 
 ### Hosting
 
