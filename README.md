@@ -13,13 +13,15 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 > LACAZE is a fictional brand. All clients, products, services and events in this repository are invented.
 
-## Demo
+## Working demo
 
-**Try it live: https://lacaze-advisor.onrender.com** (no account needed). Pick one of the 50 test cases and generate: an unedited case replays its scored v0.2.3 run in a few seconds; edit anything, or start from a blank input, and the model runs live. It is a free instance, so the first visit after a quiet spell may take about a minute to wake up.
+**https://lacaze-advisor.onrender.com** (no account needed). Pick one of the 50 test cases and generate: an unedited case replays its scored v0.2.3 run in a few seconds; edit anything, or start from a blank input, and the model runs live. It is a free instance, so the first visit after a quiet spell may take about a minute to wake up.
 
-[![The workbench generating three drafts for case C05](assets/demo-preview.gif)](assets/demo.mp4)
+## Recording
 
-[Watch the 80-second walkthrough](assets/demo.mp4) (English subtitles). An after-sales case is generated, then each stage is opened in turn: the facts Prepare loaded, the Planner's asks and angles, the Writer's drafts and the one sentence Polish rewrote.
+[![The workbench generating three drafts for case C05](assets/recording-preview.gif)](assets/recording.mp4)
+
+[Watch the 80-second recording](assets/recording.mp4) (English subtitles). An after-sales case is generated, then each stage is opened in turn: the facts Prepare loaded, the Planner's asks and angles, the Writer's drafts and the one sentence Polish rewrote.
 
 ## Example
 
