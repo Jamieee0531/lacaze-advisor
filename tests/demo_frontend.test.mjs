@@ -82,10 +82,11 @@ test('only what the backend would reject blocks generation', () => {
   const base = { ...newInput('2026-11-08'), client_information: { client_id: 'cl001' } };
   assert.deepEqual(errors(base), [], 'a recommendation may name no product');
   assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { salutation: '周女士' } }), ['name']);
+  assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { name: '周敏' } }), ['salutation']);
   for (const scenario of ['Post-purchase care', 'Event invitation', 'Price objection', 'Birthday and festive greetings']) {
     assert.deepEqual(errors({ ...base, scenario, case_date: '2028-06-01' }), [], scenario);
   }
-  assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { name: '周敏' }, scenario: 'Post-purchase care' }), []);
+  assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { name: '周敏', salutation: '周女士' }, scenario: 'Post-purchase care' }), []);
 });
 
 test('missing context becomes a hint on the field it concerns', () => {
@@ -100,7 +101,6 @@ test('missing context becomes a hint on the field it concerns', () => {
   assert.deepEqual(hints({ ...care, product_information: { product_ids: ['colette'] } }), ['products']);
   assert.deepEqual(hints({ ...care, product_information: { product_ids: ['odette'] } }), []);
   assert.deepEqual(hints({ ...care, case_date: '2026-01-02' }), ['client']);
-  assert.deepEqual(hints({ ...newInput('2026-11-08'), client_information: { name: '周敏' } }), ['salutation']);
   assert.deepEqual(hints({ ...base, case_date: '2028-01-02' }), ['date']);
 });
 

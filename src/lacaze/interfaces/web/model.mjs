@@ -194,8 +194,9 @@ export function submissionIssues(input, foundation) {
   if (!record && !isText(input.client_information?.name) && !issues.some(i => i.field === 'name')) {
     issues.push({ field: 'name', message: '请填写新客户姓名。', level: 'error' });
   }
+  // Without a salutation the model would guess one, gender included, so it is required.
   if (!isText(record?.salutation || input.client_information?.salutation)) {
-    hint(record ? 'client' : 'salutation', '没有称呼时，消息会用较通用的开头。建议填写，例如“林女士”。');
+    issues.push({ field: record ? 'client' : 'salutation', message: '请填写客户称呼，例如“林女士”。', level: 'error' });
   }
   const years = foundation.calendar.map(c => c.date.slice(0, 4)).sort();
   if (years.length && isDate(input.case_date)
