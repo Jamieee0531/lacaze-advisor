@@ -22,8 +22,18 @@ from lacaze.interfaces.demo import (
     stream_generation,
 )
 from lacaze.interfaces.quota import DailyQuota
+from lacaze.interfaces.replay import find_replay, load_replays, stream_replay
 
 WEB_DIR = Path(__file__).with_name("web")
+
+
+class WebFiles(StaticFiles):
+    """Browsers revalidate the workbench files, so a new version shows on the next load."""
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
 
 
 def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
@@ -44,6 +54,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
                 if (settings.data_dir / "cases" / name).is_file()
                 for case in load_cases(settings.data_dir / "cases" / name)
             ]
+            app.state.replays = load_replays(settings.data_dir / "demo" / "replays.json")
             yield
         finally:
             if client:
@@ -55,7 +66,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
     if settings.access_code:
         app.add_middleware(AccessCodeMiddleware, code=settings.access_code.get_secret_value())
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.hosts)
-    app.mount("/web", StaticFiles(directory=WEB_DIR, check_dir=False), name="web")
+    app.mount("/web", WebFiles(directory=WEB_DIR, check_dir=False), name="web")
 
     @app.get("/", include_in_schema=False)
     async def index() -> FileResponse:
@@ -81,8 +92,12 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
                 status_code=422, detail="无法找到客户。请选择已有客户，或填写新客户姓名。"
             ) from None
 
-    @app.post("/generate/stream", dependencies=[Depends(require_same_origin), Depends(quota)])
+    @app.post("/generate/stream", dependencies=[Depends(require_same_origin)])
     async def generate_stream(case: CaseInput) -> StreamingResponse:
+        # An unedited demo case replays its scored v0.2.3 run: no model call, no quota.
+        if record := find_replay(app.state.replays, case):
+            return GenerationStreamResponse(stream_replay(record))
+        quota()
         return GenerationStreamResponse(stream_generation(app.state.workflow, case))
 
     @app.get("/health")

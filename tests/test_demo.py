@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from lacaze.application.workflow import AdvisorWorkflow
 from lacaze.interfaces.api import create_app
-from tests.conftest import ScriptedModel
+from tests.conftest import ScriptedModel, live
 
 
 def events(response):
@@ -44,7 +44,7 @@ def test_stream_delivers_actual_stages_retries_and_final_output(data, cases):
     with TestClient(
         create_app(AdvisorWorkflow(model.model, data)), base_url="http://127.0.0.1"
     ) as client:
-        response = client.post("/generate/stream", json=cases[1].model_dump(mode="json"))
+        response = client.post("/generate/stream", json=live(cases[1]))
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     log = events(response)
@@ -94,7 +94,7 @@ def test_stream_reports_failure_without_leaking_exception_body(data, cases):
 
     flow.generate = fail
     with TestClient(create_app(flow), base_url="http://127.0.0.1") as client:
-        response = client.post("/generate/stream", json=cases[0].model_dump(mode="json"))
+        response = client.post("/generate/stream", json=live(cases[0]))
     assert events(response)[-1]["type"] == "error"
     assert "provider secret sentinel" not in response.text
 
@@ -160,7 +160,7 @@ def test_demo_rejects_untrusted_host_even_with_matching_origin(data, cases):
     ) as client:
         response = client.post(
             "/generate/stream",
-            json=cases[0].model_dump(mode="json"),
+            json=live(cases[0]),
             headers={
                 "Host": "unrelated.example",
                 "Origin": "http://unrelated.example",

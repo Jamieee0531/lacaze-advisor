@@ -13,6 +13,11 @@ def data():
     return RuntimeData.load(Path(__file__).resolve().parents[1] / "data")
 
 
+def live(case) -> dict:
+    """The case as an edited input: a new ID, so the workbench runs it live instead of replaying it."""
+    return {**case.model_dump(mode="json"), "case_id": f"LIVE_{case.case_id}"}
+
+
 @pytest.fixture
 def cases():
     return load_cases(Path(__file__).resolve().parents[1] / "data/cases/development.jsonl")

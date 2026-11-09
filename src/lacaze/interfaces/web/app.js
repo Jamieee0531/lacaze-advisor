@@ -128,7 +128,7 @@ function renderPipeline() {
 }
 
 function renderReady() {
-  return `<section class="ready-state"><span class="ready-icon" aria-hidden="true">${icon('MessageSquare')}</span><h2>准备生成三条建议</h2><p>完善左侧的沟通内容后，点击“生成三条建议”。</p>${btn(`查看准备资料 ${icon('ArrowUpRight')}`, 'stage', 'data-stage="prepare"')}</section>`;
+  return `<section class="ready-state"><span class="ready-icon" aria-hidden="true">${icon('MessageSquare')}</span><h2>准备生成三条建议</h2><p>完善左侧的沟通内容后，点击“生成三条建议”。</p></section>`;
 }
 
 const activity = {
@@ -180,7 +180,9 @@ function renderComplete() {
   return `<header class="content-heading"><h2>三条候选消息</h2>${btn(`查看生成过程 ${icon('ArrowUpRight')}`, 'process')}</header>`
     + (r.warnings.length ? `<div class="alert">需要顾问留意：<br>${r.warnings.map(h).join('<br>')}</div>` : '')
     + `<div class="reply-grid">${replies}</div>`
-    + `<p class="outcome-note"><span>${h(r.model)} · 用时 ${seconds} 秒</span></p>`;
+    + `<p class="outcome-note"><span>${state.run.replayed
+      ? `复用 v0.2.3 评估时的结果，未调用模型。修改任一输入后再生成，会实时调用模型。`
+      : `${h(r.model)} · 用时 ${seconds} 秒`}</span></p>`;
 }
 
 function renderMain() {
@@ -267,28 +269,10 @@ function stageOutput(key) {
   return dataView(stage.output);
 }
 
-async function previewPrepare() {
-  const errors = validateInput(state.input);
-  if (errors.length) { toast(errors[0]); return; }
-  const input = clone(state.input);
-  try {
-    const response = await fetch('/demo/prepare', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
-    const body = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(responseError(response.status, body));
-    openDialog('Prepare · 准备资料', '按当前输入整理的资料，未调用模型。', [
-      ['输出摘要', () => packView(body)], ['完整事实', () => factsView(body.facts)],
-      ['输入数据', () => dataView(input)], ['完整 JSON', () => raw({ input, output: body })],
-    ]);
-  } catch (error) {
-    toast(error instanceof TypeError ? '无法连接服务，请稍后重试。' : error.message);
-  }
-}
-
 function showStage(key) {
   if (!stageNames[key]) return;
   const stage = state.run?.stages[key], [name, desc] = stageNames[key];
   if (!stage || stage.status === 'idle') {
-    if (key === 'prepare') { previewPrepare(); return; }
     openDialog(`${name} · ${desc}`, '', [['当前状态', () => muted(running() ? '该阶段尚未开始，前面的阶段完成后自动执行。' : '该阶段尚未执行。点击“生成三条建议”后开始。')]]);
     return;
   }

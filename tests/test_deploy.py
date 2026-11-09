@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from lacaze.application.workflow import AdvisorWorkflow
 from lacaze.interfaces.api import create_app
-from tests.conftest import ScriptedModel
+from tests.conftest import ScriptedModel, live
 
 HOST = "https://lacaze-demo.onrender.com"
 
@@ -49,7 +49,7 @@ def test_access_code_guards_every_page_but_health(data, monkeypatch):
 
 def test_daily_limit_caps_billable_generations(data, cases, monkeypatch):
     monkeypatch.setenv("LACAZE_DAILY_GENERATION_LIMIT", "2")
-    payload = cases[0].model_dump(mode="json")
+    payload = live(cases[0])
     with client_for(data) as client:
         assert client.post("/generate", json=payload).status_code == 200
         assert client.post("/generate/stream", json=payload).status_code == 200
@@ -82,3 +82,20 @@ def test_no_daily_limit_by_default(data, cases, monkeypatch):
     with client_for(data) as client:
         for _ in range(3):
             assert client.post("/generate", json=payload).status_code == 200
+
+
+def test_unedited_case_replays_without_model_or_quota(data, cases, monkeypatch):
+    monkeypatch.setenv("LACAZE_DAILY_GENERATION_LIMIT", "1")
+    monkeypatch.setattr(
+        "lacaze.interfaces.replay.PACE",
+        dict.fromkeys(["prepare", "planner", "writer", "polish"], 0),
+    )
+    model = ScriptedModel()
+    app = create_app(AdvisorWorkflow(model.model, data))
+    with TestClient(app, base_url="http://127.0.0.1") as client:
+        for _ in range(2):
+            body = client.post("/generate/stream", json=cases[1].model_dump(mode="json")).text
+            assert '"replayed": true' in body
+        assert model.seen == [], "a replay never calls the model"
+        assert client.post("/generate/stream", json=live(cases[1])).status_code == 200
+        assert client.post("/generate/stream", json=live(cases[1])).status_code == 429

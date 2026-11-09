@@ -261,7 +261,7 @@ export function applyEvent(run, event) {
   else if (event.type === 'stage_retry' && stage) stage.retries += 1;
   else if (event.type === 'stage_completed' && stage) Object.assign(stage, { status: 'completed', output: event.output, usage: event.usage ?? null });
   else if (event.type === 'stage_skipped' && stage) Object.assign(stage, { status: 'skipped', reason: event.reason || '' });
-  else if (event.type === 'result') Object.assign(next, { status: 'complete', result: event.result });
+  else if (event.type === 'result') Object.assign(next, { status: 'complete', result: event.result, replayed: Boolean(event.replayed) });
   else if (event.type === 'error') {
     Object.assign(next, { status: 'error', error: event.message || '本次生成未完成，请重新生成。' });
     if (stage) stage.status = 'error';
