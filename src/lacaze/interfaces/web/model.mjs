@@ -256,7 +256,7 @@ export function newRun() {
 export function applyEvent(run, event) {
   const next = structuredClone(run);
   const stage = next.stages[event.stage];
-  if (event.type === 'run_started') next.meta = { version: event.version, model: event.model };
+  if (event.type === 'run_started') next.meta = { version: event.version, model: event.model, replay: Boolean(event.replay) };
   else if (event.type === 'stage_started' && stage) Object.assign(stage, { status: 'running', input: event.input });
   else if (event.type === 'stage_retry' && stage) stage.retries += 1;
   else if (event.type === 'stage_completed' && stage) Object.assign(stage, { status: 'completed', output: event.output, usage: event.usage ?? null });

@@ -280,7 +280,8 @@ function showStage(key) {
   if (key === 'prepare' && stage.output) tabs.push(['完整事实', () => factsView(stage.output.facts)]);
   if (stage.input) tabs.push(['输入数据', () => dataView(stage.input)]);
   tabs.push(['完整 JSON', () => raw({ input: stage.input, output: stage.output, usage: stage.usage })]);
-  openDialog(`${name} · ${desc}`, `${state.run.stages.prepare.input?.case_id || ''} · 本次生成`, tabs);
+  const source = state.run.meta?.replay ? `复用 v${state.run.meta.version} 评估结果` : '本次生成';
+  openDialog(`${name} · ${desc}`, `${state.run.stages.prepare.input?.case_id || ''} · ${source}`, tabs);
 }
 
 function showProcess() {
