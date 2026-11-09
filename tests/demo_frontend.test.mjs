@@ -75,33 +75,35 @@ test('raw input rejects malformed nested values without throwing', () => {
   }
 });
 
-const errors = input => submissionIssues(input, foundation).filter(i => i.level === 'error').map(i => i.field);
-const hints = input => submissionIssues(input, foundation).filter(i => i.level === 'hint').map(i => i.field).sort();
+const fields = input => submissionIssues(input, foundation).map(i => i.field).sort();
 
-test('only what the backend would reject blocks generation', () => {
+test('new clients need a name and a salutation', () => {
   const base = { ...newInput('2026-11-08'), client_information: { client_id: 'cl001' } };
-  assert.deepEqual(errors(base), [], 'a recommendation may name no product');
-  assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { salutation: '周女士' } }), ['name']);
-  assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { name: '周敏' } }), ['salutation']);
-  for (const scenario of ['Post-purchase care', 'Event invitation', 'Price objection', 'Birthday and festive greetings']) {
-    assert.deepEqual(errors({ ...base, scenario, case_date: '2028-06-01' }), [], scenario);
-  }
-  assert.deepEqual(errors({ ...newInput('2026-11-08'), client_information: { name: '周敏', salutation: '周女士' }, scenario: 'Post-purchase care' }), []);
+  assert.deepEqual(fields(base), [], 'a recommendation may name no product (C21)');
+  assert.deepEqual(fields({ ...newInput('2026-11-08'), client_information: { salutation: '周女士' } }), ['name']);
+  assert.deepEqual(fields({ ...newInput('2026-11-08'), client_information: { name: '周敏' } }), ['salutation']);
+  assert.deepEqual(fields({ ...base, case_date: '2028-01-02' }), ['date']);
 });
 
-test('missing context becomes a hint on the field it concerns', () => {
+test('an input must make business sense for its scenario', () => {
   const base = { ...newInput('2026-11-08'), client_information: { client_id: 'cl001' } };
-  assert.deepEqual(hints({ ...base, scenario: 'Event invitation' }), ['event']);
-  assert.deepEqual(hints({ ...base, scenario: 'Event invitation', case_date: '2026-11-25', product_information: { event_id: 'ev01' } }), ['event']);
-  assert.deepEqual(hints({ ...base, scenario: 'Price objection' }), ['history', 'products']);
+  const invite = { ...base, scenario: 'Event invitation' };
+  assert.deepEqual(fields(invite), ['event']);
+  assert.ok(submissionIssues({ ...invite, case_date: '2026-11-25', product_information: { event_id: 'ev01' } }, foundation)
+    .some(i => i.message.includes('已经结束')));
+  assert.deepEqual(fields({ ...invite, product_information: { event_id: 'ev01' } }), []);
+
+  const price = { ...base, scenario: 'Price objection' };
+  assert.deepEqual(fields(price), ['history', 'products']);
   const said = normalizeHistory([{ date: '2026-11-07', role: 'client', text: '有点贵' }]);
-  assert.deepEqual(hints({ ...base, scenario: 'Price objection', conversation_history: said, product_information: { product_ids: ['odette'] } }), []);
+  assert.deepEqual(fields({ ...price, conversation_history: said, product_information: { product_ids: ['odette'] } }), []);
+
   const care = { ...base, scenario: 'Post-purchase care' };
-  assert.deepEqual(hints(care), ['products']);
-  assert.deepEqual(hints({ ...care, product_information: { product_ids: ['colette'] } }), ['products']);
-  assert.deepEqual(hints({ ...care, product_information: { product_ids: ['odette'] } }), []);
-  assert.deepEqual(hints({ ...care, case_date: '2026-01-02' }), ['client']);
-  assert.deepEqual(hints({ ...base, case_date: '2028-01-02' }), ['date']);
+  assert.deepEqual(fields(care), ['products']);
+  assert.deepEqual(fields({ ...care, product_information: { product_ids: ['colette'] } }), ['products']);
+  assert.deepEqual(fields({ ...care, product_information: { product_ids: ['odette'] } }), []);
+  assert.deepEqual(fields({ ...care, case_date: '2026-01-02', product_information: { product_ids: ['odette'] } }), ['client']);
+  assert.deepEqual(fields({ ...care, client_information: { name: '周敏', salutation: '周女士' } }), ['client']);
 });
 
 test('birthdays in common written forms are accepted', () => {
@@ -118,6 +120,8 @@ test('switching scenario drops inputs the new scenario does not read', () => {
   assert.deepEqual(fitScenario({ ...input, scenario: 'Reactivation' }).product_information, { product_ids: [], event_id: null });
   assert.deepEqual(fitScenario({ ...input, scenario: 'Event invitation' }).product_information, { product_ids: ['odette'], event_id: 'ev01' });
   assert.deepEqual(fitScenario({ ...input, scenario: 'Price objection' }).product_information, { product_ids: ['odette'], event_id: null });
+  const care = { ...input, scenario: 'Post-purchase care', client_information: { client_id: 'cl001' }, product_information: { product_ids: ['odette', 'colette'] } };
+  assert.deepEqual(fitScenario(care, foundation).product_information.product_ids, ['odette'], 'only bags the client bought');
 });
 
 test('backend errors become readable messages', () => {

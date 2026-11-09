@@ -3,7 +3,7 @@
 import { stageNames } from './labels.mjs';
 import {
   MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS, STAGES, applyEvent, consumeEvents, editableInput, historyErrors,
-  blocking, fieldsFor, fitScenario, isDate, newCaseId, newInput, newRun, normalizeBirthday, normalizeHistory, normalizeInput,
+  dataYears, fieldsFor, fitScenario, isDate, newCaseId, newInput, newRun, normalizeBirthday, normalizeHistory, normalizeInput,
   purchasesOf, responseError, scenarios, submissionIssues, validateInput,
 } from './model.mjs';
 import {
@@ -13,7 +13,10 @@ import {
 
 const $ = id => document.getElementById(id);
 const clone = value => structuredClone(value);
-const today = () => new Date().toLocaleDateString('sv-SE');
+const today = () => {
+  const date = new Date().toLocaleDateString('sv-SE'), range = state.boot && dataYears(foundation());
+  return range && (date < range.min || date > range.max) ? range.max : date;
+};
 
 const state = {
   boot: null, sourceId: null, input: null, isNew: false, dirty: false, stale: false,
@@ -32,6 +35,7 @@ function clientRecord() {
 function renderInput() {
   const f = foundation(), c = state.input, record = clientRecord(), ci = c.client_information;
   const latest = [...c.conversation_history].reverse().find(m => m.role === 'client');
+  const range = dataYears(f);
   const purchases = record ? purchasesOf(f, record.client_id, c.case_date) : [];
   const caseOptions = state.boot.cases.map(row => `<option value="${h(row.case_id)}" ${row.case_id === state.sourceId ? 'selected' : ''}>${h(row.case_id)} · ${h(scenarios[row.scenario])}</option>`).join('');
   const modified = state.sourceId && state.dirty ? `<span class="source-state">已修改 · ${btn('还原', 'restore')}</span>` : '';
@@ -46,14 +50,14 @@ function renderInput() {
 
   $('input-content').innerHTML =
     `<div class="case-field"><div class="source-heading"><label for="case-select">输入来源</label>${modified}</div><select id="case-select"><option value="__blank" ${state.isNew ? 'selected' : ''}>空白输入 · 从头填写</option><optgroup label="现有案例">${caseOptions}</optgroup></select></div>`
-    + `<div class="field-grid"><label class="full">业务日期<input type="date" data-field="case_date" value="${h(c.case_date)}" required aria-describedby="date-error">${errorSlot('date')}</label><label class="full">场景<select data-field="scenario">${Object.entries(scenarios).map(([id, label]) => `<option value="${h(id)}" ${c.scenario === id ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label></div>`
+    + `<div class="field-grid"><label class="full">业务日期<input type="date" data-field="case_date" value="${h(c.case_date)}" min="${h(range?.min)}" max="${h(range?.max)}" required aria-describedby="date-error">${errorSlot('date')}</label><label class="full">场景<select data-field="scenario">${Object.entries(scenarios).map(([id, label]) => `<option value="${h(id)}" ${c.scenario === id ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label></div>`
     + `<section class="input-section"><div class="section-heading"><h3>客户信息</h3>${btn(`查看档案 ${icon('ArrowUpRight')}`, 'client')}</div><label class="sr-only" for="client-select">选择客户</label><select id="client-select" aria-describedby="client-error"><option value="__new" ${!record ? 'selected' : ''}>新客户 · 填写客户信息</option>${clientOptions}</select>${errorSlot('client')}${clientBlock}</section>`
     + `<section class="input-section" id="history-section"><div class="section-heading"><h3>对话历史 <span class="history-count">${history.length} 条</span></h3>${history.length ? btn('编辑', 'edit-history') : ''}</div>${recent}<div class="history-actions">${btn(`${icon('Plus')} 添加对话`, 'add-history', '', 'history-add')}${history.length ? btn('查看全部', 'history') : ''}</div>${errorSlot('history')}</section>`
     + productSection(record, purchases) + errorSlot('general');
   renderValidation();
 }
 
-const TAGS = { suggested: '建议选择', optional: '选填' };
+const TAGS = { required: '必选', suggested: '建议选择', optional: '选填' };
 const tag = need => ` <span class="required-tag">${TAGS[need]}</span>`;
 
 /** Products and event, shown only for the scenarios that read them. */
@@ -75,7 +79,7 @@ function productSection(record, purchases) {
     const unknown = pi.event_id && !f.events.some(e => e.event_id === pi.event_id);
     const events = f.events.map(e => `<option value="${h(e.event_id)}" ${pi.event_id === e.event_id ? 'selected' : ''}>${h(e.name)} · ${h(fmtDate(e.date))}</option>`).join('')
       + (unknown ? `<option value="${h(pi.event_id)}" selected>${h(pi.event_id)} · 未收录</option>` : '');
-    html += `<label class="event-field">相关活动${tag(need.event)}<select id="event-select" aria-describedby="event-error"><option value="">请选择活动</option>${events}</select>${errorSlot('event')}</label>`;
+    html += `<label class="event-field">相关活动${tag(need.event)}<select id="event-select" ${need.event === 'required' ? 'required aria-required="true"' : ''} aria-describedby="event-error"><option value="">请选择活动</option>${events}</select>${errorSlot('event')}</label>`;
   }
   return `<section class="input-section">${html}</section>`;
 }
@@ -91,15 +95,12 @@ function renderValidation(force = false) {
   const issues = submissionIssues(state.input, foundation());
   document.querySelectorAll('[data-error-for]').forEach(node => {
     const field = node.dataset.errorFor;
-    // Hints never block, so they show at once; errors wait until the field was touched or a run tried.
     const visible = force || state.validationAttempted || state.touched.has(field);
-    const mine = issues.filter(i => i.field === field && (visible || i.level === 'hint'));
-    const hasError = mine.some(i => i.level === 'error');
-    node.textContent = [...new Set(mine.map(i => i.message))].join('\n');
-    node.hidden = !mine.length;
-    node.classList.toggle('field-hint', mine.length > 0 && !hasError);
+    const messages = visible ? [...new Set(issues.filter(i => i.field === field).map(i => i.message))] : [];
+    node.textContent = messages.join('\n');
+    node.hidden = !messages.length;
     const target = fieldTarget[field]?.() || document.querySelector(`[data-field="${field}"]`);
-    target?.setAttribute('aria-invalid', String(hasError));
+    target?.setAttribute('aria-invalid', String(messages.length > 0));
   });
   return issues;
 }
@@ -416,8 +417,8 @@ function focusIssue(field) {
 async function generate() {
   if (running()) return;
   state.validationAttempted = true;
-  const errors = blocking(renderValidation(true));
-  if (errors.length) { focusIssue(errors[0].field); return; }
+  const issues = renderValidation(true);
+  if (issues.length) { focusIssue(issues[0].field); return; }
   const input = clone(state.input), controller = new AbortController();
   state.controller = controller;
   state.stale = false;
@@ -516,7 +517,7 @@ document.addEventListener('click', event => {
 function updateField(target, commit) {
   const field = target.dataset.field;
   if (!field) return;
-  if (field === 'scenario') state.input = fitScenario({ ...state.input, scenario: target.value });
+  if (field === 'scenario') state.input = fitScenario({ ...state.input, scenario: target.value }, foundation());
   else if (field === 'case_date') state.input = { ...state.input, case_date: target.value };
   else if (['name', 'salutation', 'birthday'].includes(field)) {
     const value = field === 'birthday' && commit ? normalizeBirthday(target.value) : target.value;
@@ -549,7 +550,7 @@ document.addEventListener('change', event => {
   }
   if (target.id === 'client-select') {
     const client = target.value === '__new' ? { name: '', salutation: '' } : { client_id: target.value };
-    state.input = { ...state.input, client_information: client };
+    state.input = fitScenario({ ...state.input, client_information: client }, foundation());
     state.touched.add('client');
     markDirty();
     renderInput();

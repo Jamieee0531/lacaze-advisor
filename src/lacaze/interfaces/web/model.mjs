@@ -149,23 +149,29 @@ export const SCENARIO_FIELDS = {
   'Birthday and festive greetings': { products: 'hidden', event: 'hidden' },
   // Optional: a client may ask for something the catalogue lacks (see C21).
   'Product recommendation': { products: 'suggested', event: 'hidden' },
-  'Post-purchase care': { products: 'suggested', event: 'hidden' },
+  'Post-purchase care': { products: 'required', event: 'hidden' },
   'Reactivation': { products: 'hidden', event: 'hidden' },
-  'Event invitation': { products: 'optional', event: 'suggested' },
-  'Price objection': { products: 'suggested', event: 'hidden' },
+  'Event invitation': { products: 'optional', event: 'required' },
+  'Price objection': { products: 'required', event: 'hidden' },
 };
 
 export const fieldsFor = scenario => SCENARIO_FIELDS[scenario] || { products: 'optional', event: 'optional' };
 
-/** Drop inputs the new scenario does not use, so nothing hidden is sent. */
-export function fitScenario(input) {
+/**
+ * Drop inputs the scenario does not use, so nothing hidden is sent. For after-sales care, keep only
+ * bags the chosen client actually bought.
+ */
+export function fitScenario(input, foundation = null) {
   const fields = fieldsFor(input.scenario), pi = input.product_information || {};
+  let productIds = fields.products === 'hidden' ? [] : (pi.product_ids || []);
+  const clientId = input.client_information?.client_id;
+  if (input.scenario === 'Post-purchase care' && foundation && clientId) {
+    const owned = new Set(purchasesOf(foundation, clientId, input.case_date).map(p => p.product_id));
+    productIds = productIds.filter(id => owned.has(id));
+  }
   return {
     ...input,
-    product_information: {
-      product_ids: fields.products === 'hidden' ? [] : (pi.product_ids || []),
-      event_id: fields.event === 'hidden' ? null : (pi.event_id ?? null),
-    },
+    product_information: { product_ids: productIds, event_id: fields.event === 'hidden' ? null : (pi.event_id ?? null) },
   };
 }
 
@@ -182,53 +188,51 @@ function fieldOf(message, knownClient) {
   return 'general';
 }
 
+/** First and last date the store data covers (holiday calendar and events). */
+export function dataYears(foundation) {
+  const years = foundation.calendar.map(c => c.date.slice(0, 4)).sort();
+  return years.length ? { min: `${years[0]}-01-01`, max: `${years.at(-1)}-12-31` } : null;
+}
+
 /**
- * What the form should say about an input. Only `error` blocks generation, and only for what the
- * backend itself would reject. Everything else is a `hint`: the case still runs, and the Planner
- * is told what is missing.
+ * Everything that blocks generation, each tied to the form field that should show it. Stricter than
+ * the backend contract: an input must also make business sense (an invitation names an event, after-sales
+ * care concerns a bag the client bought). Real edge cases stay open, e.g. asking for a bag the catalogue lacks.
  */
 export function submissionIssues(input, foundation) {
   const record = foundation.clients.find(c => c.client_id === input.client_information?.client_id);
-  const issues = validateInput(input).map(message => ({ field: fieldOf(message, record), message, level: 'error' }));
-  const hint = (field, message) => issues.push({ field, message, level: 'hint' });
-  if (!record && !isText(input.client_information?.name) && !issues.some(i => i.field === 'name')) {
-    issues.push({ field: 'name', message: '请填写新客户姓名。', level: 'error' });
-  }
-  // Without a salutation the model would guess one, gender included, so it is required.
-  if (!isText(record?.salutation || input.client_information?.salutation)) {
-    issues.push({ field: record ? 'client' : 'salutation', message: '请填写客户称呼，例如“林女士”。', level: 'error' });
-  }
-  const years = foundation.calendar.map(c => c.date.slice(0, 4)).sort();
-  if (years.length && isDate(input.case_date)
-      && (input.case_date.slice(0, 4) < years[0] || input.case_date.slice(0, 4) > years.at(-1))) {
-    hint('date', `节日日历只覆盖 ${years[0]}–${years.at(-1)} 年，这个日期附近的节日不会被提及。`);
+  const issues = validateInput(input).map(message => ({ field: fieldOf(message, record), message }));
+  const add = (field, message) => issues.push({ field, message });
+  if (!record && !isText(input.client_information?.name) && !issues.some(i => i.field === 'name')) add('name', '请填写新客户姓名。');
+  // Without a salutation the model would guess one, gender included.
+  if (!isText(record?.salutation || input.client_information?.salutation)) add(record ? 'client' : 'salutation', '请填写客户称呼，例如“林女士”。');
+  const range = dataYears(foundation);
+  if (range && isDate(input.case_date) && (input.case_date < range.min || input.case_date > range.max)) {
+    add('date', `业务日期请选在 ${range.min.slice(0, 4)}–${range.max.slice(0, 4)} 年内，门店资料只覆盖这段时间。`);
   }
   const pi = input.product_information || {};
   const chosen = (Array.isArray(pi.product_ids) ? pi.product_ids : []).filter(id => foundation.products.some(p => p.product_id === id));
+  const history = Array.isArray(input.conversation_history) ? input.conversation_history : [];
   if (input.scenario === 'Post-purchase care') {
-    if (!record) hint('client', '新客户没有购买记录，消息不会提到具体的购买。');
+    if (!record) add('client', '售后关怀针对已购买的客户，请选择已有客户。');
     else {
       const owned = new Set(purchasesOf(foundation, record.client_id, input.case_date).map(p => p.product_id));
-      if (!owned.size) hint('client', '该客户在业务日期前没有购买记录，消息不会提到具体的购买。');
-      else if (!chosen.length) hint('products', '未选择商品：消息只能参考购买记录，不会讲具体的护理细节。');
-      else if (chosen.some(id => !owned.has(id))) hint('products', '所选商品不在该客户的购买记录里。');
+      if (!owned.size) add('client', '该客户在业务日期前没有购买记录，无法做售后关怀。');
+      else if (!chosen.length) add('products', '请选择这次售后关怀涉及的商品。');
+      else if (chosen.some(id => !owned.has(id))) add('products', '只能选择该客户已购买的商品。');
     }
-  } else if (input.scenario === 'Price objection' && !chosen.length) {
-    hint('products', '未选择商品：消息无法回应具体价格。');
   }
-  if (input.scenario === 'Price objection' && Array.isArray(input.conversation_history)
-      && !input.conversation_history.some(m => m?.role === 'client' && isText(m.text))) {
-    hint('history', '对话里还没有客户的原话，消息只能泛泛回应价格。');
+  if (input.scenario === 'Price objection') {
+    if (!chosen.length) add('products', '请选择客户在问价格的商品。');
+    if (!history.some(m => m?.role === 'client' && isText(m.text))) add('history', '价格异议需要客户的原话，请在对话中添加客户消息。');
   }
   if (input.scenario === 'Event invitation') {
     const event = foundation.events.find(e => e.event_id === pi.event_id);
-    if (!event) hint('event', '未选择活动：消息无法写出活动的时间和内容。');
-    else if (isDate(input.case_date) && event.date < input.case_date) hint('event', '该活动在业务日期前已经结束。');
+    if (!event) add('event', '请选择要邀请的活动。');
+    else if (isDate(input.case_date) && event.date < input.case_date) add('event', '该活动在业务日期前已经结束，请更换活动或调整业务日期。');
   }
   return issues;
 }
-
-export const blocking = issues => issues.filter(i => i.level === 'error');
 
 /** A readable message for a non-OK HTTP response from the backend. */
 export function responseError(status, body) {

@@ -265,4 +265,3 @@ label input,label select,label textarea {margin-top:7px; color:var(--ink)}
 .input-sheet[inert] .sheet-scroll {opacity:.6}
 #generate:disabled {opacity:.7}
 .skeleton.planning {min-height:96px; border:0; border-left:2px solid #e4ddd3; border-radius:0; padding:4px 0 0 15px}
-.field-error.field-hint {color:#83582b}
