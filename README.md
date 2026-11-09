@@ -19,9 +19,9 @@ Given a client, the conversation so far and a scenario, it returns three candida
 
 ## Recording
 
-[![The workbench generating three drafts for case C05](assets/recording-preview.gif)](assets/recording.mp4)
+https://github.com/user-attachments/assets/8f469e21-9419-4793-8c19-1a04bbabf9ff
 
-[Watch the 80-second recording](assets/recording.mp4) (English subtitles). An after-sales case is generated, then each stage is opened in turn: the facts Prepare loaded, the Planner's asks and angles, the Writer's drafts and the one sentence Polish rewrote.
+80-second recording (English subtitles). An after-sales case is generated, then each stage is opened in turn: the facts Prepare loaded, the Planner's asks and angles, the Writer's drafts and the one sentence Polish rewrote.
 
 ## Example
 
