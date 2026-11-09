@@ -98,6 +98,8 @@ Output directories must be new. Each case writes `Cxx.json` (input, plan, drafts
 uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 ```
 
+Open http://127.0.0.1:8000 for the advisor workbench: pick one of the 50 cases or start from a blank input, edit anything, and watch the four stages run before the three drafts appear.
+
 `POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema. Intended for local use.
 
 ### Hosting
@@ -148,6 +150,7 @@ tests/             Offline tests with a scripted model
 
 ```sh
 uv run pytest -q
+node --test tests/demo_frontend.test.mjs
 uv run ruff check src scripts tests
 ```
 

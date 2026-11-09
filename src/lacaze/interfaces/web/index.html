@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>LACAZE · 顾问工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23191919'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='Baskerville,Georgia,serif' font-size='40' fill='white'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/web/styles.css">
+<script type="module" src="/web/app.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-group"><a class="wordmark" href="/" data-action="home" aria-label="LACAZE 顾问工作台">LACAZE</a><span>顾问工作台</span></div>
+  <nav class="top-actions" aria-label="工作台资料"><button data-action="library" disabled><span data-icon="BookOpen"></span><span>品牌与资料</span></button><button data-action="input" disabled><span data-icon="Code"></span><span class="library-label">完整输入</span></button></nav>
+</header>
+<main class="page">
+  <div class="page-heading"><div><h1>本次沟通</h1></div><div class="case-stamp" id="case-stamp"></div></div>
+  <div class="workbench">
+    <aside class="input-sheet" id="input-sheet" aria-label="业务输入"><div class="sheet-heading"><h2>沟通内容</h2></div><div class="sheet-scroll" id="input-content"><p class="loading-note">正在加载案例与资料…</p></div><div class="sheet-actions"><button class="primary" data-action="generate" id="generate" disabled>生成三条建议<span data-icon="ArrowRight"></span></button></div></aside>
+    <section class="workspace" aria-label="生成过程与候选消息"><nav class="pipeline" id="pipeline" aria-label="处理阶段"></nav><div id="notice" role="status" aria-live="polite"></div><div id="workspace-content"></div></section>
+  </div>
+  <footer class="footer"><span>LACAZE 为虚构品牌，所有案例资料均为虚构。</span></footer>
+</main>
+<dialog class="detail-dialog" id="detail-dialog" aria-labelledby="dialog-title"><header class="dialog-heading"><div><h2 id="dialog-title"></h2><p id="dialog-description"></p></div><button class="close-button" data-action="close" aria-label="关闭弹窗"><span data-icon="X"></span></button></header><nav class="dialog-tabs" id="dialog-tabs" aria-label="资料视图"></nav><div class="dialog-body" id="dialog-body"></div><div class="dialog-footer" id="dialog-footer" hidden></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
