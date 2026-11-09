@@ -54,30 +54,33 @@ It is a fixed workflow, not an autonomous agent: no tools, no database, no retri
 
 ## Quick start
 
-Requires Python 3.13 and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.13, [uv](https://docs.astral.sh/uv/) and an Anthropic API key.
 
 ```sh
+git clone https://github.com/Jamieee0531/lacaze-advisor.git
+cd lacaze-advisor
 uv sync --locked
-cp .env.example .env        # set ANTHROPIC_API_KEY
+cp .env.example .env        # then set ANTHROPIC_API_KEY in .env
 uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000 for the advisor workbench: pick one of the 50 cases or start from a blank input, edit anything, and watch the four stages run before the three drafts appear. Unedited cases replay their scored v0.2.3 run; anything else calls the model.
+Open http://127.0.0.1:8000 . That one command starts everything: the same server serves the workbench page and the API behind it, so there is no separate frontend to build or run.
 
-From the command line:
-
-```sh
-uv run lacaze validate-data
-uv run lacaze generate --case-id C12
-```
+In the workbench, pick one of the 50 test cases or start from a blank input, edit anything, and generate. The four stages run in turn before the three drafts appear; afterwards, click a stage to see what it produced. An unedited case replays its scored v0.2.3 run; anything else calls the model.
 
 `LACAZE_MODEL` selects the model (default `claude-sonnet-5-5`). Set `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` only when going through a proxy.
 
-### Your own case
+## Command line and API
+
+The same workflow runs without the browser, for scripts and batch runs.
 
 ```sh
-uv run lacaze generate --input new-case.json
+uv run lacaze validate-data                    # check the store data
+uv run lacaze generate --case-id C12           # one of the 50 test cases
+uv run lacaze generate --input new-case.json   # a case of your own
 ```
+
+A case file:
 
 ```json
 {
@@ -108,15 +111,11 @@ uv run lacaze batch --concurrency 2
 
 Output directories must be new. Each case writes `Cxx.json` (input, plan, drafts, warnings, token usage) as soon as it finishes; `outputs.csv` and `summary.json` are written at the end, with `configuration.json` recording the exact data and prompts used.
 
-### HTTP
+### HTTP API
 
-```sh
-uv run uvicorn lacaze.interfaces.api:app --host 127.0.0.1 --port 8000
-```
+While the server runs, `POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema.
 
-`POST /generate` takes a case and returns the same result as the CLI. `GET /scenarios` lists the six scenarios, `GET /health` reports readiness, and `/docs` has the interactive schema.
-
-### Hosting
+## Hosting
 
 `render.yaml` deploys the app to Render; enter `ANTHROPIC_API_KEY` in the Render dashboard. `LACAZE_DAILY_GENERATION_LIMIT` caps generations per UTC day (100 in `render.yaml`), and a spending limit on the API key is the backstop. Setting `LACAZE_ACCESS_CODE` puts every page behind the browser's sign-in prompt (any user name, the code as password). Render's own host name is allowed automatically; other host names go in `LACAZE_ALLOWED_HOSTS`.
 
