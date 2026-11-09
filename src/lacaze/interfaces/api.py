@@ -27,6 +27,16 @@ from lacaze.interfaces.replay import find_replay, load_replays, stream_replay
 WEB_DIR = Path(__file__).with_name("web")
 
 
+class HostCheck(TrustedHostMiddleware):
+    """Host allow-list for every path but /health, which a hosting platform probes by internal address."""
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["path"] == "/health":
+            await self.app(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
+
+
 class WebFiles(StaticFiles):
     """Browsers revalidate the workbench files, so a new version shows on the next load."""
 
@@ -65,7 +75,7 @@ def create_app(workflow: AdvisorWorkflow | None = None) -> FastAPI:
     app = FastAPI(title="LACAZE Advisor", version=__version__, lifespan=lifespan)
     if settings.access_code:
         app.add_middleware(AccessCodeMiddleware, code=settings.access_code.get_secret_value())
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.hosts)
+    app.add_middleware(HostCheck, allowed_hosts=settings.hosts)
     app.mount("/web", WebFiles(directory=WEB_DIR, check_dir=False), name="web")
 
     @app.get("/", include_in_schema=False)

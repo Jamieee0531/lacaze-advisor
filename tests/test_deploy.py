@@ -15,7 +15,15 @@ def client_for(data, base_url="http://127.0.0.1", **kwargs):
 
 def test_unknown_host_is_rejected_by_default(data):
     with client_for(data, base_url=HOST) as client:
-        assert client.get("/health").status_code == 400
+        assert client.get("/").status_code == 400
+        assert client.get("/scenarios").status_code == 400
+
+
+def test_health_check_answers_any_host(data):
+    """The host's health checker may use an internal address; /health carries no data."""
+    with client_for(data, base_url="http://10.0.0.7:10000") as client:
+        assert client.get("/health").status_code == 200
+        assert client.get("/").status_code == 400
 
 
 def test_render_hostname_is_allowed(data, monkeypatch):
